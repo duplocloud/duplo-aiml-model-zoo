@@ -8,6 +8,12 @@ TRAIN_DIR = os.getenv('TRAIN_DIR') #"/opt/ml/input/data/custom_data"
 WEIGHT_DIR = os.getenv('WEIGHT_DIR') #"/opt/ml/input/yolov4"
 MODEL_DIR =  "/opt/ml/model"
 
+try:
+    # create model save folder
+    os.mkdir("/opt/ml/model/backup")
+except OSError as error:
+    print(error)
+
 if __name__ == '__main__':
     data_file = "{0}/{1}".format(TRAIN_DIR, "ts_data.data")
     cfg_file = "{0}/{1}".format(WEIGHT_DIR, "yolov4-train.cfg")
