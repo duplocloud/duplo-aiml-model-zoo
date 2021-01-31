@@ -2,6 +2,7 @@
 FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
 #FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
 
+# docker build -t  duplocloud/cuda:11.1.1-cdnn8-ubuntu20.04-v2 .
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
@@ -79,6 +80,33 @@ COPY ./requirements.txt .
 RUN  python3 --version
 RUN pip3 install -r requirements.txt
 ###########################################
+
+
+########## moved to base #####
+RUN pip3 install sagemaker-containers
+##########
+#ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/cuda-11.0/targets/x86_64-linux/lib/:/usr/local/cuda-11.0/compat/:$LD_LIBRARY_PATH
+#ENV PATH=$LD_LIBRARY_PATH:$PATH
+
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH
+RUN set -eux; \
+    \
+    url="https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init"; \
+    wget "$url"; \
+    chmod +x rustup-init; \
+    ./rustup-init -y --no-modify-path --default-toolchain nightly; \
+    rm rustup-init; \
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME; \
+    rustup --version; \
+    cargo --version; \
+    rustc --version;
+
+RUN apt update -y; apt-get install -y clang
+RUN pip3 install darknetpy
+########## moved to base #####
+
 ######
 # check : reduce docker size ?
 #RUN df -h
@@ -98,6 +126,10 @@ RUN rm /tmp/*
 #RUN du -h -d 1 ~/.
 #######
 
+
+
+
+################
 RUN chmod +x darknet
 RUN pip3 list
 ###########################################
@@ -108,6 +140,7 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/cuda-10.1/targets/x86_64-linux/lib
 ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/cuda-11.1.1/targets/x86_64-linux/lib/:/usr/local/cuda-11.1.1/compat/:$LD_LIBRARY_PATH
 ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/cuda-11.0/targets/x86_64-linux/lib/:/usr/local/cuda-11.0/compat/:$LD_LIBRARY_PATH
 ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/cuda-10.2/targets/x86_64-linux/lib/:/usr/local/cuda-10.2/compat/:$LD_LIBRARY_PATH
+ENV PATH=$LD_LIBRARY_PATH:$PATH
 #COPY *.sh /opt/ml/code/
 #COPY *.py /opt/ml/code/
 #RUN chmod 777 *.sh
