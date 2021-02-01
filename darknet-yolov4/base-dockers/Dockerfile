@@ -1,6 +1,6 @@
 #FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
-#FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
-FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
+FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
+#FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
 #FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
 
 # docker build -t  duplocloud/cuda:11.0-cdnn8-ubuntu18.04-v2 .
