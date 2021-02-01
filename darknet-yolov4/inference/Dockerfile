@@ -5,7 +5,7 @@
 #FROM duplocloud/cuda:11.1.1-cdnn8-ubuntu20.04-v3
 FROM duplocloud/cuda:11.0-cdnn8-ubuntu18.04-v3
 
-
+# docker build -t duplocloud/cuda:11.0-cdnn8-ubuntu18.04-sm-infer-v3 .
 
 
 # Set a docker label to advertise multi-model support on the container
@@ -39,6 +39,16 @@ LABEL com.amazonaws.sagemaker.capabilities.accept-bind-to-port=true
 #RUN pip3 install darknetpy
 ########### move to base #####
 
+
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends \
+    openjdk-8-jdk-headless
+
+# already part of requirements.txt. todo: conslidate
+RUN pip3 --no-cache-dir install mxnet \
+                                multi-model-server \
+                                sagemaker-inference \
+                                retrying
 ############
 COPY requirements.txt /requirements.txt
 RUN pip3 install -r /requirements.txt
