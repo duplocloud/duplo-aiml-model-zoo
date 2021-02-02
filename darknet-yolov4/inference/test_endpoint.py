@@ -57,3 +57,6 @@ print("time:", "  total:", int(end_t - start_t))
 
 ## cpu 10000
 # time python test-endpoint.py
+# CPU 1829 time:   total: 1545   cur: 0.8809313774108887
+# GPU  461 time:   total: 211    cur: 0.5005311965942383
+# GPU 1544 time:   total: 709   cur: 0.5369710922241211
