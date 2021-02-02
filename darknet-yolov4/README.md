@@ -61,5 +61,10 @@ Response:
 
 Body:
 [
-  "class_name = danger, confidence = 100 % boxes= "
+  {
+    "class_name": "danger",
+    "confidence": 100,
+    "text": "class_name = danger, confidence = 100 % "
+  }
+]
 ```

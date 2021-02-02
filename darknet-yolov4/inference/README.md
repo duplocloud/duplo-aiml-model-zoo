@@ -6,9 +6,7 @@
     * weights: s3://duploservices-aiops-yolo-128329325849/yolov4/
     * output: s3://duploservices-aiops-yolo-128329325849/output/
  
-
-### TODO
-
+ 
 
 aws ecr get-login 
 #docker login above response (remove -e none)
@@ -60,5 +58,10 @@ Response:
 
 Body:
 [
-  "class_name = danger, confidence = 100 % boxes= "
+  {
+    "class_name": "danger",
+    "confidence": 100,
+    "text": "class_name = danger, confidence = 100 % "
+  }
+]
 ```

@@ -8,8 +8,7 @@
     * output: s3://duploservices-aiops-yolo-128329325849/output/
 * flask
 
-### TODO
-
+ 
 
 aws ecr get-login 
 #docker login above response (remove -e none)
@@ -61,5 +60,10 @@ Response:
 
 Body:
 [
-  "class_name = danger, confidence = 100 % boxes= "
+  {
+    "class_name": "danger",
+    "confidence": 100,
+    "text": "class_name = danger, confidence = 100 % "
+  }
+]
 ```
