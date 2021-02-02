@@ -2,6 +2,11 @@ import json
 import numpy as np
 import boto3
 import random
+import time
+from datetime import datetime
+
+start_dt = datetime.now()
+start_t = time.time()
 
 runtime = boto3.Session().client(service_name='sagemaker-runtime')
 
@@ -40,11 +45,15 @@ def invoke_endpoint():
 
 
 for i in range(10000):
+    start_t_cur = time.time()
     invoke_endpoint()
+    end_t_cur = time.time()
+    print("time:", "  total:", int(end_t_cur - start_t), "  cur:", (end_t_cur - start_t_cur))
+
 invoke_endpoint()
 
-## cpu 10000
-# time python test-endpoint.py
+end_t = time.time()
+print("time:", "  total:", int(end_t - start_t))
 
-## gpu 10000
+## cpu 10000
 # time python test-endpoint.py
