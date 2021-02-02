@@ -1,10 +1,11 @@
 flask
 requests
-#opencv-python
-#numpy
 retrying
 Pillow
 sagemaker-inference
 multi-model-server
 mxnet
+boto3
 
+#opencv-python
+#numpy

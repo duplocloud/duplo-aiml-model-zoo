@@ -1,10 +1,6 @@
-#FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
-#FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
-FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
-#FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
+FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
 
 # docker build -t  duplocloud/cuda:11.0-cdnn8-ubuntu18.04-v3 .
-# docker build -t  duplocloud/cuda:11.1.1-cdnn8-ubuntu20.04-v3 .
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
@@ -157,7 +153,3 @@ ENV LD_LIBRARY_PATH=/usr/local/cuda-10.2/targets/x86_64-linux/lib/:/usr/local/cu
 #RUN chmod 777 *.sh
 ######
 
-
-#ENTRYPOINT ["bash"]
-#ENV SAGEMAKER_PROGRAM train.sh
-#ENV SAGEMAKER_PROGRAM serve.py

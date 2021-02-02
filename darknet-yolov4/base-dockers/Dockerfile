@@ -1,7 +1,8 @@
 #FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
-FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
 #FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
 #FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
+
+FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
 
 # docker build -t  duplocloud/cuda:11.0-cdnn8-ubuntu18.04-v2 .
 # docker build -t  duplocloud/cuda:11.1.1-cdnn8-ubuntu20.04-v3 .
@@ -132,14 +133,6 @@ RUN apt-get autoremove --yes
 RUN rm -rf /var/lib/{apt,dpkg,cache,log}/
 RUN rm -rf /var/lib/apt/lists/*
 RUN touch /tmp/aa
-#RUN rm -rf /tmp/*
-#RUN pip cache purge
-###########################################
-#######
-# check : reduce docker size ?
-#RUN du -h -d 1 /opt
-#RUN du -h -d 1 ~/.
-#######
 
 ################
 RUN pip3 list
@@ -155,12 +148,3 @@ ENV LD_LIBRARY_PATH=/usr/local/cuda-11.0/lib64:/usr/local/cuda-11.0/bin:/usr/loc
 ENV LD_LIBRARY_PATH=/usr/local/cuda-11.2/lib64:/usr/local/cuda-10.2/bin:/usr/local/cuda-10.2/targets/x86_64-linux/lib/:/usr/local/cuda-10.2/compat/:$LD_LIBRARY_PATH
 ENV PATH=$PATH:/opt/VirtualGL/bin
 
-#COPY *.sh /opt/ml/code/
-#COPY *.py /opt/ml/code/
-#RUN chmod 777 *.sh
-######
-
-
-#ENTRYPOINT ["bash"]
-#ENV SAGEMAKER_PROGRAM train.sh
-#ENV SAGEMAKER_PROGRAM serve.py
