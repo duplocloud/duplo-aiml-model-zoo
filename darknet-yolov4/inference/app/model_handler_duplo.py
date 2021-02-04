@@ -29,23 +29,9 @@ print("duplo-yolov4-infer",'ModelService, Initializing...')
 _service = ModelService()
 print("duplo-yolov4-infer",'ModelService Initialized,')
 
-# def handle(data, context):
-#     if not _service.initialized:
-#         print("duplo-yolov4-infer",'Service Not Initialized, Initializing...')
-#         _service.initialize(context)
-#
-#     if data is None:
-#         print("duplo-yolov4-infer",'Service Not Initialized, data is None ')
-#         return None
-#
-#     return _service.handle(data, context)
-
-
 @app.route("/")
 def duplo_aiml():
     return "Hello, duplo_aiml-world!"
-
-
 
 @app.route('/ping', methods=['GET'])
 def ping():
@@ -55,7 +41,8 @@ def ping():
 def inference( ):
     print("inference ==== content_type ", request.content_type)
     print("inference ==== content_type ", request.headers)
-    print("inference ==== ", request.data)
+    # TODO; bsed on request.content_type --  json or binary image ?
+    # print("inference ==== ", request.data)
     data = request.data
     if not _service.initialized:
         print("duplo-yolov4-infer", 'Service Not Initialized, Initializing...')
