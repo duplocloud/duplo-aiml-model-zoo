@@ -1,0 +1,106 @@
+
+FROM ubuntu:20.04
+
+############################################
+# sudo docker build -t  duplocloud/cuda:cpu-only-ubuntu20.04-v1  -f Dockerfile.cpu .
+############################################
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+ENV CODE_PATH=/opt/ml/code
+ENV MODEL_PATH=/opt/ml/model
+ENV INPUT_PATH=/opt/ml/input
+
+############################################
+RUN mkdir -p /opt/ml/code
+RUN mkdir -p /opt/ml/model/backup
+RUN mkdir -p /opt/ml/input/data/custom_data
+RUN mkdir -p /opt/ml/input/data/yolov4
+############################################
+
+############################################
+RUN apt update
+RUN apt install -y \
+    wget git vim curl zip  jq net-tools \
+    pkg-config  build-essential cmake autoconf automake \
+    clang-format  apt-utils \
+    checkinstall libtool  yasm gnupg-agent \
+    apt-transport-https  ca-certificates software-properties-common libopencv-dev netcat
+
+# install system dependencies
+#RUN apt-get update && \
+#    apt-get install -y --no-install-recommends gcc netcat
+RUN apt-get clean autoclean
+RUN apt-get autoremove --yes
+RUN apt-get clean
+############################################
+
+############################################
+RUN apt-get update && apt-get install -y python3  python3-pip
+RUN pip3 install scikit-build
+RUN pip3 install --upgrade cython
+RUN pip3 install --upgrade cython
+RUN pip3 install opencv-python
+RUN  python3 --version
+############################################
+
+############################################
+# Get OpenCV dependencies
+RUN apt-get update && apt-get install -y \
+    gfortran libjpeg8-dev libtiff5-dev libavcodec-dev libavformat-dev \
+    libswscale-dev libdc1394-22-dev libxine2-dev libv4l-dev \
+    qt5-default libgtk2.0-dev libtbb-dev libatlas-base-dev \
+    libfaac-dev libmp3lame-dev libtheora-dev libvorbis-dev libxvidcore-dev libopencore-amrnb-dev \
+    libopencore-amrwb-dev x264 v4l-utils libprotobuf-dev protobuf-compiler libgoogle-glog-dev \
+    libgflags-dev libgphoto2-dev
+RUN apt-get install -y --no-install-recommends  encfs uwsgi nginx nginx-extras   supervisor \
+    uuid-dev libcap-dev libpcre3-dev libxml2-dev libxslt1-dev
+RUN apt-get clean autoclean
+RUN apt-get autoremove --yes
+RUN apt-get clean
+
+############################################
+# build darknet
+WORKDIR /opt/ml/code
+RUN git clone https://github.com/AlexeyAB/darknet.git ./
+# set GPU=1 and CUDNN=1 to speedup on GPU
+# set CUDNN_HALF=1 to further speedup 3 x times (Mixed-precision on Tensor Cores) GPU: Volta, Xavier, Turing and higher
+# set AVX=1 and OPENMP=1 to speedup on CPU (if error occurs then set AVX=0)
+# set ZED_CAMERA=1 to enable ZED SDK 3.0 and above
+# set ZED_CAMERA_v2_8=1 to enable ZED SDK 2.X
+RUN make OPENCV=1 AVX=1  OPENMP=1 LIBSO=1
+RUN chmod +x darknet
+############################################
+
+###########################################
+RUN pip3 install sagemaker-containers
+RUN apt update -y; apt-get install -y clang
+###########################################
+
+###########################################
+RUN pip3 list
+COPY ./requirements-cpu.txt requirements.txt
+RUN  python3 --version
+RUN pip3 install -r requirements.txt
+###########################################
+
+###########################################
+RUN apt-get clean autoclean
+RUN apt-get autoremove --yes
+RUN rm -rf /var/lib/{apt,dpkg,cache,log}/
+RUN rm -rf /var/lib/apt/lists/*
+###########################################
+
+
+################
+RUN pip3 list
+###########################################
+RUN ls /opt/ml/code/
+WORKDIR /opt/ml/code
