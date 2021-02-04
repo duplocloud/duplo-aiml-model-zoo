@@ -37,12 +37,15 @@ RUN mkdir -p /opt/ml/input/data/yolov4
 
 COPY *custom_data /opt/ml/input/data/custom_data/
 COPY *yolov4 /opt/ml/input/data/yolov4/
-COPY *.py $CODE_PATH/
-COPY sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
+COPY src/* $CODE_PATH/
+COPY src/sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
 RUN chmod +x /usr/local/bin/dockerd-entrypoint.py
 
-COPY *.sh $CODE_PATH/
-RUN chmod +x $CODE_PATH/*sh
+COPY src/nginx.conf /etc/nginx/
+COPY src/website_model_service.conf /etc/nginx/conf.d/
+COPY src/uwsgi.ini /etc/uwsgi/
+COPY src/supervisord.conf /etc/supervisor/
+
 
 ENV PYTHONPATH=$CODE_PATH
 ENV PYTHONUNBUFFERED=TRUE
@@ -53,11 +56,6 @@ ENV PYTHONDONTWRITEBYTECODE=TRUE
 
 RUN rm /etc/nginx/sites-enabled/default
 RUN rm -r /root/.cache
-
-COPY server-conf/nginx.conf /etc/nginx/
-COPY server-conf/flask-site-nginx.conf /etc/nginx/conf.d/
-COPY server-conf/uwsgi.ini /etc/uwsgi/
-COPY server-conf/supervisord.conf /etc/supervisor/
 
 
 CMD ["/usr/bin/supervisord"]

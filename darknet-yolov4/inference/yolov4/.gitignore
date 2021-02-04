@@ -1,0 +1,16 @@
+
+.vscode/*
+.vs/*
+dist/
+node_modules/
+
+.idea/
+.DS_Store
+*/.DS_Store
+tmp/
+
+data/
+
+*.log
+classes.names
+yolov4*
