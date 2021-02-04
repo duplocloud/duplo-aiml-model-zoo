@@ -52,8 +52,11 @@ def ping():
     return jsonify({'data': 'pong!'})
 
 @app.route('/inference', methods=['POST'])
-def inference(data):
+def inference( ):
+   print("inference ==== ", request.data)
+   data =  request.data
    resp = _service.handle(data, None)
+   print("inference ==== ", resp)
    return resp
 
 if __name__ == '__main__':

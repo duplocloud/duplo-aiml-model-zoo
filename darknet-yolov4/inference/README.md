@@ -47,7 +47,18 @@ echo 128329325849.dkr.ecr.us-west-2.amazonaws.com/aimodels:$dc
 echo  duplocloud/cuda:$dc
 #
 
+```shell script
+docker  build  -t duplocloud/cuda:cpu-only-d-ubuntu20.04-v1 -f Dockerfile.duplo.cpu .; docker run  -itd -p 8080:80  duplocloud/cuda:cpu-only-d-ubuntu20.04-v1 
+curl  -XPOST  --data-binary @"/Users/brighu/_duplo_code/duplo-aiml-model-zoo/tmp/darknet-yolov4/train/custom_data/images/00002.jpg" -H "Content-Type: application/octet-stream" localhost:8080/inference
+
 ```
+
+```shell script
+curl -v -XPOST http://example:port/path --data-binary @file.tar -H "Content-Type: application/octet-stream"
+curl -v -POST  --data-binary @"/Users/brighu/_duplo_code/duplo-aiml-model-zoo/tmp/darknet-yolov4/train/custom_data/images/00002.jpg" -H "Content-Type: application/octet-stream" localhost:8080/inference
+
+
+
 abc@ip-10-188-22-158:~/workspace/duplo-aiml-model-zoo/darknet-yolov4/inference$ python test-endpoint.py  
 Response:
 {
