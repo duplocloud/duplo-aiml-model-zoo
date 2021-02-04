@@ -43,6 +43,32 @@ class DuploS3Utils:
         self.download_s3_files()
         self._list_files_g()
 
+    def _list_files_g(self):
+        val = {}
+        try:
+            val["S3_BUCKET"] = self.S3_BUCKET
+            val["HAS_S3_BUCKET"] = self.HAS_S3_BUCKET
+
+            val["WEIGHT_DIR"] = self.WEIGHT_DIR
+
+            val["YOLOV4_CFG_NAME"] = self.YOLOV4_CFG_NAME
+            val["WEIGHTS_FILE_NAME"] = self.WEIGHTS_FILE_NAME
+            val["CLASS_NAMES_FILE"] = self.CLASS_NAMES_FILE
+
+            val["weights_file_path"] = self.weights_file_path
+            val["class_names_file_path"] = self.class_names_file_path
+            val["cfg_file_path"] = self.cfg_file_path
+
+            val["cfg_file_path_EXISTS"] = path.exists(self.cfg_file_path)
+            val["weights_file_path_EXISTS"] = path.exists(self.weights_file_path)
+            val["class_names_file_path_EXISTS"] = path.exists(self.class_names_file_path)
+
+            val["bucket_folder_name"] = self.bucket_folder_name
+            val["bucket_name"] = self.bucket_name
+        except Exception as e:
+            print("duplo-yolov4-infer", ' Error while  _list_files_g!!', e)
+        print(json.dumps(val, indent=2))
+        return ""
 
     def download_s3_files(self):
         if self.HAS_S3_BUCKET:
@@ -94,27 +120,7 @@ class DuploS3Utils:
                     filewrite.close()
                 except Exception as e:
                     print("duplo-yolov4-infer",'Error while loading model!!', e)
-    def _list_files_g(self):
-        val = {}
-        try:
-            val["S3_BUCKET"] = self.S3_BUCKET
-            val["HAS_S3_BUCKET"] = self.HAS_S3_BUCKET
-            val["WEIGHT_DIR"] = self.WEIGHT_DIR
-            val["YOLOV4_CFG_NAME"] = self.YOLOV4_CFG_NAME
-            val["WEIGHTS_FILE_NAME"] = self.WEIGHTS_FILE_NAME
-            val["CLASS_NAMES_FILE"] = self.CLASS_NAMES_FILE
-            val["weights_file_path"] = self.weights_file_path
-            val["weights_file_path"] = self.weights_file_path
-            val["class_names_file_path"] = self.class_names_file_path
-            val["cfg_file"] = self.cfg_file
-            val["weights_file"] = self.weights_file
-            val["class_file"] = self.class_file
-            val["bucket_folder_name"] = self.bucket_folder_name
-            val["bucket_name"] = self.bucket_name
-        except Exception as e:
-            print("duplo-yolov4-infer", ' Error while  _list_files_g!!', e)
-        print(json.dumps(val, indent=2))
-        return ""
+
 
     def load_model(self):
         try:
@@ -216,7 +222,7 @@ class ModelHandler(object):
     def handle(self, data, context):
         self._list_files()
         model_input = self.preprocess(data)
-        print("duplo-yolov4-infer",'MODEL INPUT', model_input)
+        print("duplo-yolov4-infer",'MODEL INPUT')
         out_classes, out_confidences , out_boxes =self.inference(model_input)
         print("duplo-yolov4-infer",'Model Generated output!')
         return self.postprocess(out_classes, out_confidences, out_boxes)
