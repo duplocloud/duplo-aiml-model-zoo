@@ -10,15 +10,15 @@ start_t = time.time()
 
 runtime = boto3.Session().client(service_name='sagemaker-runtime')
 
-
+# endpoint_name="https://runtime.sagemaker.us-west-2.amazonaws.com/endpoints/duplo-yolov4-darknet-test12-ep/invocations"
+# endpoint_name="duplo-yolov4-darknet-test19-ep"
+endpoint_name = "?"
 def call_sm_for_img_num(img_nu):
     # img = open('/config/workspace/docker/custom_data/images/00028.jpg', 'rb').read()
     img_path = '/config/workspace/docker/custom_data/images/{0}.jpg'.format(img_nu)
     img = open(img_path, 'rb').read()
 
-    # endpoint_name="https://runtime.sagemaker.us-west-2.amazonaws.com/endpoints/duplo-yolov4-darknet-test12-ep/invocations"
-    # endpoint_name="duplo-yolov4-darknet-test19-ep"
-    endpoint_name = "duplo-yolov4-darknet-test26-ep"
+
     response = runtime.invoke_endpoint(
         EndpointName=endpoint_name,
         ContentType='application/x-image',
@@ -44,6 +44,7 @@ def invoke_endpoint():
         print("duplo-yolov4-infer", 'invoke_endpoint Exception!', e)
 
 
+endpoint_name = "duplo-yolov4-darknet-test32-ep"
 for i in range(1545):
     start_t_cur = time.time()
     invoke_endpoint()

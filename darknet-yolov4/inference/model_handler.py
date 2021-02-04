@@ -9,6 +9,10 @@ import glob
 import os.path
 from os import path
 import boto3
+import json
+from subprocess import Popen
+
+
 
 # from duplo_s3_utils import DuploS3Utils
 sys.path.insert(1, '/opt/ml/code/')
@@ -35,7 +39,12 @@ class DuploS3Utils:
 
     def download_s3_files(self):
         if self.HAS_S3_BUCKET:
-            subprocess.Popen(["/bin/bash", "/opt/ml/code/sync_s3_yolov4.sh", self.S3_BUCKET, self.WEIGHT_DIR])
+            # process = Popen(['/opt/ml/code/sync_s3_yolov4.sh', str(self.S3_BUCKET), str(self.WEIGHT_DIR)], shell=True)
+            # subprocess.Popen(["/bin/bash", "/opt/ml/code/sync_s3_yolov4.sh", self.S3_BUCKET, self.WEIGHT_DIR])
+            # result_cmd = subprocess.check_output(['/opt/ml/code/sync_s3_yolov4.sh', str(self.S3_BUCKET), str(self.WEIGHT_DIR)])
+            # print(result_cmd)
+            os.system("/opt/ml/code/sync_s3_yolov4.sh {} {}".format(str(self.S3_BUCKET), str(self.WEIGHT_DIR)))
+            ## alternate way
             file_done = os.path.join(self.WEIGHT_DIR, "download_complete")
             if not os.path.exists(file_done):
                 try:
@@ -79,31 +88,31 @@ class DuploS3Utils:
                 except Exception as e:
                     print("duplo-yolov4-infer",'Error while loading model!!', e)
     def _list_files_g(self):
+        val = {}
         try:
-            print("duplo-yolov4-infer", "self.S3_BUCKET", "= ",  self.S3_BUCKET)
-            print("duplo-yolov4-infer", "self.HAS_S3_BUCKET",  "= ",  self.HAS_S3_BUCKET)
-            print("duplo-yolov4-infer", "self.WEIGHT_DIR",  "= ",  self.WEIGHT_DIR)
-            print("duplo-yolov4-infer", "self.YOLOV4_CFG_NAME",  "= ",  self.YOLOV4_CFG_NAME)
-            print("duplo-yolov4-infer", "self.WEIGHTS_FILE_NAME",  "= ",  self.WEIGHTS_FILE_NAME)
-            print("duplo-yolov4-infer", "self.CLASS_NAMES_FILE",  "= ",  self.CLASS_NAMES_FILE)
-            print("duplo-yolov4-infer", "self.cfg_file_path", "= ",   self.cfg_file_path)
-            print("duplo-yolov4-infer", "self.weights_file_path",  "= ",  self.weights_file_path)
-            print("duplo-yolov4-infer", "self.class_names_file_path",  "= ",  self.class_names_file_path)
-            print("duplo-yolov4-infer", "cfg_file",  "= ",  self.cfg_file_path,  "= ",  path.exists(self.cfg_file_path))
-            print("duplo-yolov4-infer", "weights_file", "= ",   self.weights_file_path, "= ",   path.exists(self.weights_file_path))
-            print("duplo-yolov4-infer", "class_file",  "= ",  self.class_names_file_path,  "= ",  path.exists(self.class_names_file_path))
-
-            print("duplo-yolov4-infer", "self.bucket_folder_name", "= ", self.bucket_folder_name)
-            print("duplo-yolov4-infer", "self.bucket_name", "= ", self.bucket_name)
+            val["S3_BUCKET"] = self.S3_BUCKET
+            val["HAS_S3_BUCKET"] = self.HAS_S3_BUCKET
+            val["WEIGHT_DIR"] = self.WEIGHT_DIR
+            val["YOLOV4_CFG_NAME"] = self.YOLOV4_CFG_NAME
+            val["WEIGHTS_FILE_NAME"] = self.WEIGHTS_FILE_NAME
+            val["CLASS_NAMES_FILE"] = self.CLASS_NAMES_FILE
+            val["weights_file_path"] = self.weights_file_path
+            val["weights_file_path"] = self.weights_file_path
+            val["class_names_file_path"] = self.class_names_file_path
+            val["cfg_file"] = self.cfg_file
+            val["weights_file"] = self.weights_file
+            val["class_file"] = self.class_file
+            val["bucket_folder_name"] = self.bucket_folder_name
+            val["bucket_name"] = self.bucket_name
         except Exception as e:
             print("duplo-yolov4-infer", ' Error while  _list_files_g!!', e)
+        print(json.dumps(val, indent=2))
         return ""
 
     def load_model(self):
         try:
             self.download_s3_files()
             self.parse_class_names()
-            self._list_files_g()
             net = cv2.dnn_DetectionModel( self.cfg_file_path, self.weights_file_path)
             net.setInputSize(416, 416)
             net.setInputScale(1.0 / 255)
@@ -144,8 +153,7 @@ class DuploS3Utils:
 
 class ModelHandler(object):
     def _list_files(self):
-        files  =  self.s3_utils._list_files_g()
-        print("duplo-yolov4-infer",'_list_files',files)
+        pass
 
     def __init__(self):
         self.initialized = False
@@ -154,7 +162,7 @@ class ModelHandler(object):
             self.s3_utils = DuploS3Utils()
             self._list_files()
             self.s3_utils.download_s3_files()
-            self.parse_class_names()
+            self.s3_utils.parse_class_names()
             print("duplo-yolov4-infer", 'download_s3_files' )
             # self.initialized = True
         except Exception as e:
@@ -165,7 +173,6 @@ class ModelHandler(object):
         self.initialized = True
         try:
             self.model = self.s3_utils.load_model()
-            # self.class_names = self.s3_utils.parse_class_names()
             print("duplo-yolov4-infer",'Model Loaded?', self.model)
             # self.initialized = True
         except Exception as e:
