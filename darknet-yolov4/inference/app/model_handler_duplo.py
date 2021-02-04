@@ -17,7 +17,7 @@ sys.path.insert(1, '.')
 import os
 # configuration
 DEBUG = True
-from .model_service import ModelService
+from .model_service_duplo import ModelService
 
 from flask import Flask, jsonify, request
 import base64

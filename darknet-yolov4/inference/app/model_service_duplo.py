@@ -13,9 +13,8 @@ import json
 from subprocess import Popen
 
 from .duplo_s3_utils import DuploS3Utils
-
 sys.path.insert(1, '/opt/ml/code/')
-
+sys.path.insert(1, '.')
 
 class ModelService(object):
     def _list_files(self):
@@ -44,12 +43,12 @@ class ModelService(object):
         except Exception as e:
             print("duplo-yolov4-infer",'Model Loading Exception!',e)
 
-    def preprocess(self, request):
+    def preprocess(self, img_array):
         self._list_files()
         print("duplo-yolov4-infer",'REQUEST')
-        dat = request[0]
+        # dat = request[0] #fix for sage maker
         try:
-            img_array = dat.get('body')
+            # img_array = dat.get('body')   #fix for sage maker
             o = io.BytesIO(img_array)
             pil_image = Image.open(o)
             input_image = cv2.cvtColor(numpy.array(pil_image), cv2.COLOR_RGB2BGR)
