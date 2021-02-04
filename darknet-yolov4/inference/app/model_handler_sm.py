@@ -11,17 +11,11 @@ from os import path
 import boto3
 import json
 from subprocess import Popen
-
-from .duplo_s3_utils import DuploS3Utils
-from .model_service import ModelService
-# from duplo_s3_utils import DuploS3Utils
 sys.path.insert(1, '/opt/ml/code/')
+sys.path.insert(1, '.')
 
-
-
-
-from flask import Flask
-app = Flask(__name__)
+# from .duplo_s3_utils import DuploS3Utils
+from .model_service import ModelService
 
 
 _service = ModelService()
@@ -36,18 +30,3 @@ def handle(data, context):
         return None
 
     return _service.handle(data, context)
-
-
-@app.route('/ping')
-def ping():
-    return 200
-
-@app.route('/inference')
-def inference(data):
-    _service.handle(data, None)
-
-if __name__ == '__main__':
-    app.run()
-
-
-

@@ -18,7 +18,7 @@ def _start_mms():
     # environment variable below if desired.
     # os.environ['SAGEMAKER_MODEL_SERVER_WORKERS'] = '2'
     os.environ['SAGEMAKER_MODEL_SERVER_WORKERS'] = '2'
-    model_server.start_model_server(handler_service='/opt/ml/code//model_handler_sm.py:handle')
+    model_server.start_model_server(handler_service='/opt/ml/code/app/model_handler_sm.py:handle')
 
 
 def main():

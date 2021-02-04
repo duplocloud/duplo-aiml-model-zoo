@@ -37,14 +37,18 @@ RUN mkdir -p /opt/ml/input/data/yolov4
 
 COPY *custom_data /opt/ml/input/data/custom_data/
 COPY *yolov4 /opt/ml/input/data/yolov4/
-COPY src/* $CODE_PATH/
-COPY src/sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
+
+
+COPY app $CODE_PATH/app
+COPY app/sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
 RUN chmod +x /usr/local/bin/dockerd-entrypoint.py
 
-COPY src/nginx.conf /etc/nginx/
-COPY src/website_model_service.conf /etc/nginx/conf.d/
-COPY src/uwsgi.ini /etc/uwsgi/
-COPY src/supervisord.conf /etc/supervisor/
+###########
+RUN useradd --no-create-home nginx
+COPY config/nginx.conf /etc/nginx/
+COPY config/website_model_service.conf /etc/nginx/conf.d/
+COPY config/uwsgi.ini /etc/uwsgi/
+COPY config/supervisord.conf /etc/supervisor/
 
 
 ENV PYTHONPATH=$CODE_PATH

@@ -13,9 +13,8 @@ import json
 from subprocess import Popen
 
 from .duplo_s3_utils import DuploS3Utils
-
 sys.path.insert(1, '/opt/ml/code/')
-
+sys.path.insert(1, '.')
 
 class ModelService(object):
     def _list_files(self):
