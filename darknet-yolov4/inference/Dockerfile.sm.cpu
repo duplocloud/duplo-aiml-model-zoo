@@ -1,5 +1,7 @@
 FROM duplocloud/cuda:cpu-only-ubuntu20.04-v1
 
+#sudo docker build -t  duplocloud/cuda:cpu-only-sm-ubuntu20.04-v42 -f Dockerfile.sm.cpu .
+
 LABEL com.amazonaws.sagemaker.capabilities.multi-models=true
 LABEL com.amazonaws.sagemaker.capabilities.accept-bind-to-port=true
 
@@ -37,8 +39,9 @@ RUN mkdir -p /opt/ml/input/data/yolov4
 
 COPY *custom_data /opt/ml/input/data/custom_data/
 COPY *yolov4 /opt/ml/input/data/yolov4/
-COPY src/* $CODE_PATH/
-COPY src/sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
+COPY app $CODE_PATH/app
+COPY config/* $CODE_PATH/app
+COPY app/sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
 RUN chmod +x /usr/local/bin/dockerd-entrypoint.py
 
 
