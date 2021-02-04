@@ -17,8 +17,8 @@ def call_sm_for_img_num(img_nu):
     img = open(img_path, 'rb').read()
 
     # endpoint_name="https://runtime.sagemaker.us-west-2.amazonaws.com/endpoints/duplo-yolov4-darknet-test12-ep/invocations"
-    endpoint_name = "duplo-yolov4-darknet-test19-ep"
-    # endpoint_name="duplo-yolov4-darknet-test20-ep"
+    # endpoint_name="duplo-yolov4-darknet-test19-ep"
+    endpoint_name = "duplo-yolov4-darknet-test26-ep"
     response = runtime.invoke_endpoint(
         EndpointName=endpoint_name,
         ContentType='application/x-image',
@@ -44,18 +44,19 @@ def invoke_endpoint():
         print("duplo-yolov4-infer", 'invoke_endpoint Exception!', e)
 
 
-for i in range(10000):
+for i in range(1545):
     start_t_cur = time.time()
     invoke_endpoint()
     end_t_cur = time.time()
-    print("time:", "  total:", int(end_t_cur - start_t), "  cur:", (end_t_cur - start_t_cur))
+    print(i, "time:", "  total:", int(end_t_cur - start_t), "  cur:", (end_t_cur - start_t_cur))
 
 invoke_endpoint()
 
 end_t = time.time()
 print("time:", "  total:", int(end_t - start_t))
 
-## cpu 10000
+## loop for 1545 inferences
+# pip install numpy boto3
 # time python test-endpoint.py
 # CPU 1829 time:   total: 1545   cur: 0.8809313774108887
 # GPU  461 time:   total: 211    cur: 0.5005311965942383

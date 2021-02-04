@@ -8,6 +8,8 @@ import subprocess
 import glob
 import os.path
 from os import path
+import boto3
+
 # from duplo_s3_utils import DuploS3Utils
 sys.path.insert(1, '/opt/ml/code/')
 
@@ -25,29 +27,74 @@ class DuploS3Utils:
 
         self.cfg_file_path = "{0}/{1}".format(self.WEIGHT_DIR, self.YOLOV4_CFG_NAME)
         self.weights_file_path  = "{0}/{1}".format(self.WEIGHT_DIR, self.WEIGHTS_FILE_NAME)
-        self.class_names_file_path  = "{0}/{1}".format(self.WEIGHT_DIR, self.WEIGHT_DIR)
+        self.class_names_file_path  = "{0}/{1}".format(self.WEIGHT_DIR, self.CLASS_NAMES_FILE)
 
+        self.download_s3_files()
         self._list_files_g()
 
 
     def download_s3_files(self):
         if self.HAS_S3_BUCKET:
-            subprocess.Popen(["/bin/bash", "/opt/ml/code/sync_s3_yolov4.sh", self.S3_BUCKET, self.class_names_file_path])
+            subprocess.Popen(["/bin/bash", "/opt/ml/code/sync_s3_yolov4.sh", self.S3_BUCKET, self.WEIGHT_DIR])
+            file_done = os.path.join(self.WEIGHT_DIR, "download_complete")
+            if not os.path.exists(file_done):
+                try:
+                    s3 = boto3.resource('s3')
+                    # "s3://duploservices-aiops-yolo-128329325849/yolov4/"
+                    bucket_path = self.S3_BUCKET.replace("s3://","").strip()
+                    bucket_arr = bucket_path.split("/")
+                    bucket_name = bucket_arr[0]
+                    bucket_folder_name = ""
+                    if len(bucket_name) > 0:
+                        bucket_arr2 = bucket_arr[1 :]
+                        bucket_folder_name = "/".join(bucket_arr2).strip()
 
+                    self.bucket_folder_name = bucket_folder_name
+                    self.bucket_name = bucket_name
+                    print("duplo-yolov4-infer", "self.bucket_folder_name", "= ", self.bucket_folder_name)
+                    print("duplo-yolov4-infer", "self.bucket_name", "= ", self.bucket_name)
+                    s3_bucket = s3.Bucket(bucket_name)
+
+                    # download file into current directory
+                    if self.bucket_folder_name == "":
+                        for s3_object in s3_bucket.objects.all():
+                            local_path = os.path.join(self.WEIGHT_DIR, filename)
+                            print("duplo-yolov4-infer", "download? s3 local_path", "= ", local_path)
+                            if s3_object.key != self.WEIGHT_DIR:
+                                path, filename = os.path.split(s3_object.key)
+                                s3_bucket.download_file(s3_object.key, local_path)
+                    else:
+                        for s3_object in s3_bucket.objects.filter(Prefix = bucket_folder_name):
+                            local_path = os.path.join(self.WEIGHT_DIR, filename)
+                            print("duplo-yolov4-infer", "download? s3 local_path", "= ", local_path)
+                            if s3_object.key != self.WEIGHT_DIR:
+                                path, filename = os.path.split(s3_object.key)
+                                local_path = os.path.join(self.WEIGHT_DIR, filename)
+                                print("duplo-yolov4-infer", "downlaoding s3 local_path", "= ", local_path)
+                                s3_bucket.download_file(s3_object.key, local_path)
+                    #avoid multiple downloads
+                    filewrite = open("file_done", "w")
+                    filewrite.write("done")
+                    filewrite.close()
+                except Exception as e:
+                    print("duplo-yolov4-infer",'Error while loading model!!', e)
     def _list_files_g(self):
         try:
-            print("duplo-yolov4-infer", "self.S3_BUCKET", self.S3_BUCKET)
-            print("duplo-yolov4-infer", "self.HAS_S3_BUCKET", self.HAS_S3_BUCKET)
-            print("duplo-yolov4-infer", "self.WEIGHT_DIR", self.WEIGHT_DIR)
-            print("duplo-yolov4-infer", "self.YOLOV4_CFG_NAME", self.YOLOV4_CFG_NAME)
-            print("duplo-yolov4-infer", "self.WEIGHTS_FILE_NAME", self.WEIGHTS_FILE_NAME)
-            print("duplo-yolov4-infer", "self.CLASS_NAMES_FILE", self.CLASS_NAMES_FILE)
-            print("duplo-yolov4-infer", "self.cfg_file_path", self.cfg_file_path)
-            print("duplo-yolov4-infer", "self.weights_file_path", self.weights_file_path)
-            print("duplo-yolov4-infer", "self.class_names_file_path", self.class_names_file_path)
-            print("duplo-yolov4-infer", "cfg_file", self.cfg_file_path, path.exists(self.cfg_file_path))
-            print("duplo-yolov4-infer", "weights_file", self.weights_file_path, path.exists(self.weights_file_path))
-            print("duplo-yolov4-infer", "class_file", self.class_names_file_path, path.exists(self.class_names_file_path))
+            print("duplo-yolov4-infer", "self.S3_BUCKET", "= ",  self.S3_BUCKET)
+            print("duplo-yolov4-infer", "self.HAS_S3_BUCKET",  "= ",  self.HAS_S3_BUCKET)
+            print("duplo-yolov4-infer", "self.WEIGHT_DIR",  "= ",  self.WEIGHT_DIR)
+            print("duplo-yolov4-infer", "self.YOLOV4_CFG_NAME",  "= ",  self.YOLOV4_CFG_NAME)
+            print("duplo-yolov4-infer", "self.WEIGHTS_FILE_NAME",  "= ",  self.WEIGHTS_FILE_NAME)
+            print("duplo-yolov4-infer", "self.CLASS_NAMES_FILE",  "= ",  self.CLASS_NAMES_FILE)
+            print("duplo-yolov4-infer", "self.cfg_file_path", "= ",   self.cfg_file_path)
+            print("duplo-yolov4-infer", "self.weights_file_path",  "= ",  self.weights_file_path)
+            print("duplo-yolov4-infer", "self.class_names_file_path",  "= ",  self.class_names_file_path)
+            print("duplo-yolov4-infer", "cfg_file",  "= ",  self.cfg_file_path,  "= ",  path.exists(self.cfg_file_path))
+            print("duplo-yolov4-infer", "weights_file", "= ",   self.weights_file_path, "= ",   path.exists(self.weights_file_path))
+            print("duplo-yolov4-infer", "class_file",  "= ",  self.class_names_file_path,  "= ",  path.exists(self.class_names_file_path))
+
+            print("duplo-yolov4-infer", "self.bucket_folder_name", "= ", self.bucket_folder_name)
+            print("duplo-yolov4-infer", "self.bucket_name", "= ", self.bucket_name)
         except Exception as e:
             print("duplo-yolov4-infer", ' Error while  _list_files_g!!', e)
         return ""
@@ -92,6 +139,9 @@ class DuploS3Utils:
         return ["error in inference"]
 
 
+
+
+
 class ModelHandler(object):
     def _list_files(self):
         files  =  self.s3_utils._list_files_g()
@@ -100,9 +150,9 @@ class ModelHandler(object):
     def __init__(self):
         self.initialized = False
         self.model = None
-        self._list_files()
         try:
             self.s3_utils = DuploS3Utils()
+            self._list_files()
             self.s3_utils.download_s3_files()
             self.parse_class_names()
             print("duplo-yolov4-infer", 'download_s3_files' )
