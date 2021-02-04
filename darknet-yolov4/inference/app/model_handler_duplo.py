@@ -29,16 +29,16 @@ print("duplo-yolov4-infer",'ModelService, Initializing...')
 _service = ModelService()
 print("duplo-yolov4-infer",'ModelService Initialized,')
 
-def handle(data, context):
-    if not _service.initialized:
-        print("duplo-yolov4-infer",'Service Not Initialized, Initializing...')
-        _service.initialize(context)
-
-    if data is None:
-        print("duplo-yolov4-infer",'Service Not Initialized, data is None ')
-        return None
-
-    return _service.handle(data, context)
+# def handle(data, context):
+#     if not _service.initialized:
+#         print("duplo-yolov4-infer",'Service Not Initialized, Initializing...')
+#         _service.initialize(context)
+#
+#     if data is None:
+#         print("duplo-yolov4-infer",'Service Not Initialized, data is None ')
+#         return None
+#
+#     return _service.handle(data, context)
 
 
 @app.route("/")
@@ -53,11 +53,14 @@ def ping():
 
 @app.route('/inference', methods=['POST'])
 def inference( ):
-   print("inference ==== ", request.data)
-   data =  request.data
-   resp = _service.handle(data, None)
-   print("inference ==== ", resp)
-   return resp
+    print("inference ==== ", request.data)
+    data = request.data
+    if not _service.initialized:
+        print("duplo-yolov4-infer", 'Service Not Initialized, Initializing...')
+        _service.initialize(None)
+    resp = _service.handle(data, None)
+    print("inference ==== ", resp)
+    return jsonify(resp)
 
 if __name__ == '__main__':
     app.run()
