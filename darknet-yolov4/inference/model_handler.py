@@ -20,6 +20,13 @@ sys.path.insert(1, '/opt/ml/code/')
 
 class DuploS3Utils:
 
+    # ENV with defaults for sagemaker inference
+    # S3_BUCKET="s3://duploservices-aiops-yolo-128329325849/yolov4/
+    # WEIGHT_DIR=opt/ml/input/data/yolov4
+    # YOLOV4_CFG_NAME=yolov4-train.cfg
+    # WEIGHTS_FILE_NAME=yolov4-train_final.weights
+    # CLASS_NAMES_FILE=classes.names
+
     def __init__(self):
         self.S3_BUCKET = os.getenv('S3_BUCKET', "s3://duploservices-aiops-yolo-128329325849/yolov4/")
         self.HAS_S3_BUCKET = os.getenv('S3_BUCKET') is not None

@@ -6,6 +6,18 @@
     * weights: s3://duploservices-aiops-yolo-128329325849/yolov4/
     * output: s3://duploservices-aiops-yolo-128329325849/output/
  
+
+### ENV with defaults for sagemaker inference
+* s3 folder for inference
+```shell script
+
+# ENV with defaults for sagemaker inference
+S3_BUCKET="s3://duploservices-aiops-yolo-128329325849/yolov4/
+WEIGHT_DIR="opt/ml/input/data/yolov4"
+YOLOV4_CFG_NAME="yolov4-train.cfg"
+WEIGHTS_FILE_NAME="yolov4-train_final.weights"
+CLASS_NAMES_FILE="classes.names"  
+```
  
 
 aws ecr get-login 
