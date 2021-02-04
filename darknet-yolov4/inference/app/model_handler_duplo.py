@@ -53,6 +53,8 @@ def ping():
 
 @app.route('/inference', methods=['POST'])
 def inference( ):
+    print("inference ==== content_type ", request.content_type)
+    print("inference ==== content_type ", request.headers)
     print("inference ==== ", request.data)
     data = request.data
     if not _service.initialized:
