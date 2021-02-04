@@ -37,11 +37,11 @@ RUN mkdir -p /opt/ml/input/data/yolov4
 
 COPY *custom_data /opt/ml/input/data/custom_data/
 COPY *yolov4 /opt/ml/input/data/yolov4/
-COPY *.py $CODE_PATH/
-COPY sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
+COPY src/* $CODE_PATH/
+COPY src/sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
 RUN chmod +x /usr/local/bin/dockerd-entrypoint.py
 
-COPY *.sh $CODE_PATH/
+
 RUN chmod +x $CODE_PATH/*sh
 
 ENV PYTHONPATH=$CODE_PATH

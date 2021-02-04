@@ -49,6 +49,15 @@ ENV PYTHONUNBUFFERED=TRUE
 ENV PYTHONDONTWRITEBYTECODE=TRUE
 
 
-#ENTRYPOINT ["python3" , "/usr/local/bin/dockerd-entrypoint.py", "serve"]
-#CMD ["serve"]
+#########
 
+RUN rm /etc/nginx/sites-enabled/default
+RUN rm -r /root/.cache
+
+COPY server-conf/nginx.conf /etc/nginx/
+COPY server-conf/flask-site-nginx.conf /etc/nginx/conf.d/
+COPY server-conf/uwsgi.ini /etc/uwsgi/
+COPY server-conf/supervisord.conf /etc/supervisor/
+
+
+CMD ["/usr/bin/supervisord"]
