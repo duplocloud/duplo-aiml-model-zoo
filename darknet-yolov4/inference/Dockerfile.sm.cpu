@@ -1,25 +1,13 @@
 FROM duplocloud/cuda:cpu-only-ubuntu20.04-v1
 
-#
-#export dc=cpu-only-ubuntu20.04-v1
-#sudo docker build -t  duplocloud/cuda:$dc .
-#sudo docker pull duplocloud/cuda:$dc
-#sudo docker image tag duplocloud/cuda:$dc 128329325849.dkr.ecr.us-west-2.amazonaws.com/aimodels:$dc
-#sudo docker push  128329325849.dkr.ecr.us-west-2.amazonaws.com/aimodels:$dc
-#echo 128329325849.dkr.ecr.us-west-2.amazonaws.com/aimodels:$dc
-#echo  duplocloud/cuda:$dc
-#
-
-# Set a docker label to advertise multi-model support on the container
 LABEL com.amazonaws.sagemaker.capabilities.multi-models=true
-# Set a docker label to enable container to use SAGEMAKER_BIND_TO_PORT environment variable if present
 LABEL com.amazonaws.sagemaker.capabilities.accept-bind-to-port=true
 
-
+############
 RUN apt-get update && \
     apt-get -y install --no-install-recommends \
     openjdk-8-jdk-headless
-
+############
 RUN pip3 --no-cache-dir install mxnet \
                                 multi-model-server \
                                 sagemaker-inference \
@@ -53,11 +41,14 @@ COPY *.py $CODE_PATH/
 COPY sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
 RUN chmod +x /usr/local/bin/dockerd-entrypoint.py
 
+COPY *.sh $CODE_PATH/
+RUN chmod +x $CODE_PATH/*sh
+
 ENV PYTHONPATH=$CODE_PATH
 ENV PYTHONUNBUFFERED=TRUE
 ENV PYTHONDONTWRITEBYTECODE=TRUE
 
 
-ENTRYPOINT ["python3" , "/usr/local/bin/dockerd-entrypoint.py"]
+ENTRYPOINT ["python3" , "/usr/local/bin/dockerd-entrypoint.py", "serve"]
 CMD ["serve"]
 

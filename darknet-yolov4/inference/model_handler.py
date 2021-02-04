@@ -8,88 +8,114 @@ import subprocess
 import glob
 import os.path
 from os import path
+# from duplo_s3_utils import DuploS3Utils
 sys.path.insert(1, '/opt/ml/code/')
 
-# S3 ? #should be part of output.tar.zg
-# "/opt/ml/input/data/custom_data"
-#"/opt/ml/input/data/yolov4"
-TRAIN_DIR = os.getenv('TRAIN_DIR')
-WEIGHT_DIR = os.getenv('WEIGHT_DIR')
-cfg_file =  "{0}/{1}".format(WEIGHT_DIR, "yolov4-train.cfg")
-weights_file =  "{0}/{1}".format(WEIGHT_DIR, "yolov4-train_final.weights")
-data_file =  "{0}/{1}".format(TRAIN_DIR, "ts_data.data")
 
-def _list_files_g():
-    try:
-        print("duplo-yolov4-infer","cfg_file", cfg_file, path.exists(cfg_file))
-        print("duplo-yolov4-infer","weights_file", weights_file, path.exists(weights_file))
-        print("duplo-yolov4-infer","data_file", data_file, path.exists(data_file))
-    except Exception as e:
-        print("duplo-yolov4-infer",' Error while  _list_files_g!!', e)
-    return ""
+class DuploS3Utils:
 
-def load_model(cfg_file=cfg_file,weights_file=weights_file):
-    try:
-        _list_files_g()
-        net = cv2.dnn_DetectionModel(cfg_file, weights_file)
-        net.setInputSize(416, 416)
-        net.setInputScale(1.0 / 255)
-        net.setInputSwapRB(True)
-    except Exception as e:
-        print("duplo-yolov4-infer",'Error while loading model!!', e)
-    return net
+    def __init__(self):
+        self.S3_BUCKET = os.getenv('S3_BUCKET', "s3://duploservices-aiops-yolo-128329325849/yolov4/")
+        self.HAS_S3_BUCKET = os.getenv('S3_BUCKET') is not None
 
-def parse_class_names():
-    _list_files_g()
-    labels = open(data_file).read().strip().split('\n')
-    for label in labels:
-        if "names" in label:
-            lb_arr = label.split("=")
-            class_names_file = lb_arr[1].strip()
-            class_names = open(class_names_file).read().strip().split('\n')
-            print("duplo-yolov4-infer","parse_class_names classes ", class_names_file, class_names)
-            return class_names
-    raise Exception("names = /opt/ml/input/data/custom_data/classes.names file not found", labels)
+        self.WEIGHT_DIR = os.getenv('WEIGHT_DIR', "/opt/ml/input/data/yolov4")
+        self.YOLOV4_CFG_NAME = os.getenv('YOLOV4_CFG_NAME', "yolov4-train.cfg")
+        self.WEIGHTS_FILE_NAME = os.getenv('WEIGHTS_FILE_NAME', "yolov4-train_final.weights")
+        self.CLASS_NAMES_FILE = os.getenv('CLASS_NAMES_FILE', "classes.names")
 
-##
-class_names = parse_class_names()
-def result(classes, confidences, inference_out_boxes, class_names=class_names):
-    try:
-        res = []
-        for i in range(len(classes)):
-            class_id = classes[i][0]
-            class_name = class_names[class_id]
-            confidence = round(confidences[i][0] * 100)
-            # boxes =  inference_out_boxes[i]
-            result_text = "class_name = {0}, confidence = {1} % ".format(class_name, confidence)
-            result_dict={}
-            result_dict["class_name"]=class_name
-            result_dict["confidence"] = confidence
-            result_dict["text"] = result_text
-            print("duplo-yolov4-infer","result_text", i, result_text)
-            res.append(result_dict)
-        print("duplo-yolov4-infer",'Postprocessing Complete!', res, type(res))
-        return [res]
-    except Exception as e:
-        print("duplo-yolov4-infer",'Error while loading model!!', e)
-    return ["error in inference"]
+        self.cfg_file_path = "{0}/{1}".format(self.WEIGHT_DIR, self.YOLOV4_CFG_NAME)
+        self.weights_file_path  = "{0}/{1}".format(self.WEIGHT_DIR, self.WEIGHTS_FILE_NAME)
+        self.class_names_file_path  = "{0}/{1}".format(self.WEIGHT_DIR, self.WEIGHT_DIR)
+
+        self._list_files_g()
+
+
+    def download_s3_files(self):
+        if self.HAS_S3_BUCKET:
+            subprocess.Popen(["/bin/bash", "/opt/ml/code/sync_s3_yolov4.sh", self.S3_BUCKET, self.class_names_file_path])
+
+    def _list_files_g(self):
+        try:
+            print("duplo-yolov4-infer", "self.S3_BUCKET", self.S3_BUCKET)
+            print("duplo-yolov4-infer", "self.HAS_S3_BUCKET", self.HAS_S3_BUCKET)
+            print("duplo-yolov4-infer", "self.WEIGHT_DIR", self.WEIGHT_DIR)
+            print("duplo-yolov4-infer", "self.YOLOV4_CFG_NAME", self.YOLOV4_CFG_NAME)
+            print("duplo-yolov4-infer", "self.WEIGHTS_FILE_NAME", self.WEIGHTS_FILE_NAME)
+            print("duplo-yolov4-infer", "self.CLASS_NAMES_FILE", self.CLASS_NAMES_FILE)
+            print("duplo-yolov4-infer", "self.cfg_file_path", self.cfg_file_path)
+            print("duplo-yolov4-infer", "self.weights_file_path", self.weights_file_path)
+            print("duplo-yolov4-infer", "self.class_names_file_path", self.class_names_file_path)
+            print("duplo-yolov4-infer", "cfg_file", self.cfg_file_path, path.exists(self.cfg_file_path))
+            print("duplo-yolov4-infer", "weights_file", self.weights_file_path, path.exists(self.weights_file_path))
+            print("duplo-yolov4-infer", "class_file", self.class_names_file_path, path.exists(self.class_names_file_path))
+        except Exception as e:
+            print("duplo-yolov4-infer", ' Error while  _list_files_g!!', e)
+        return ""
+
+    def load_model(self):
+        try:
+            self.download_s3_files()
+            self.parse_class_names()
+            self._list_files_g()
+            net = cv2.dnn_DetectionModel( self.cfg_file_path, self.weights_file_path)
+            net.setInputSize(416, 416)
+            net.setInputScale(1.0 / 255)
+            net.setInputSwapRB(True)
+        except Exception as e:
+            print("duplo-yolov4-infer", 'Error while loading model!!', e)
+        return net
+
+    def parse_class_names(self):
+        self.class_names = open(self.class_names_file_path).read().strip().split('\n')
+        return self.class_names
+        # raise Exception("names = /opt/ml/input/data/custom_data/classes.names file not found", class_names)
+
+    def result(self, classes, confidences, inference_out_boxes):
+        try:
+            res = []
+            for i in range(len(classes)):
+                class_id = classes[i][0]
+                class_name = self.class_names[class_id]
+                confidence = round(confidences[i][0] * 100)
+                # boxes =  inference_out_boxes[i]
+                result_text = "class_name = {0}, confidence = {1} % ".format(class_name, confidence)
+                result_dict={}
+                result_dict["class_name"]=class_name
+                result_dict["confidence"] = confidence
+                result_dict["text"] = result_text
+                print("duplo-yolov4-infer","result_text", i, result_text)
+                res.append(result_dict)
+            print("duplo-yolov4-infer",'Postprocessing Complete!', res, type(res))
+            return [res]
+        except Exception as e:
+            print("duplo-yolov4-infer",'Error while loading model!!', e)
+        return ["error in inference"]
 
 
 class ModelHandler(object):
     def _list_files(self):
-        files  = _list_files_g()
+        files  =  self.s3_utils._list_files_g()
         print("duplo-yolov4-infer",'_list_files',files)
 
     def __init__(self):
         self.initialized = False
         self.model = None
         self._list_files()
+        try:
+            self.s3_utils = DuploS3Utils()
+            self.s3_utils.download_s3_files()
+            self.parse_class_names()
+            print("duplo-yolov4-infer", 'download_s3_files' )
+            # self.initialized = True
+        except Exception as e:
+            print("duplo-yolov4-infer", 'download_s3_files down-loading Exception!', e)
+
 
     def initialize(self, context):
         self.initialized = True
         try:
-            self.model = load_model()
-            self.class_names = parse_class_names()
+            self.model = self.s3_utils.load_model()
+            # self.class_names = self.s3_utils.parse_class_names()
             print("duplo-yolov4-infer",'Model Loaded?', self.model)
             # self.initialized = True
         except Exception as e:
@@ -121,7 +147,7 @@ class ModelHandler(object):
 
     def postprocess(self, inference_classes, inference_confidences, inference_out_boxes):
         self._list_files()
-        return result(inference_classes,inference_confidences, inference_out_boxes)#, class_names=self.class_names)
+        return self.s3_utils.result(inference_classes,inference_confidences, inference_out_boxes)#, class_names=self.class_names)
 
     def handle(self, data, context):
         self._list_files()
