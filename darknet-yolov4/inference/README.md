@@ -20,6 +20,7 @@ CLASS_NAMES_FILE="classes.names"
 ```
  
 
+```shell script
 aws ecr get-login 
 #docker login above response (remove -e none)
 pip3 install -r ../base-dockers/requirements.txt 
@@ -35,9 +36,12 @@ sudo docker push  128329325849.dkr.ecr.us-west-2.amazonaws.com/aimodels:$dc
 echo 128329325849.dkr.ecr.us-west-2.amazonaws.com/aimodels:$dc
 echo  duplocloud/cuda:$dc
 #
+export s3_url=s3://duploservices-aiops-yolo-128329325849/inference/custom_data/images/069ee71de0456c3b_jpg.rf.db0e34dc33e401c42ae6066d63152134.jpg
 
+curl -i  -H "Accept: application/json" -H "X-HTTP-Method-Override: POST" -X POST -d  '{"image":"1.jpg","s3_url":"s3://duploservices-aiops-yolo-128329325849/inference/custom_data/images/069ee71de0456c3b_jpg.rf.db0e34dc33e401c42ae6066d63152134.jpg"}'  http://localhost:8080/inference
 
 #
+```
 export dc=11.0-cdnn8-ubuntu18.04-sm-infer-v4
 sudo docker build -t  duplocloud/cuda:$dc .
 sudo docker pull duplocloud/cuda:$dc

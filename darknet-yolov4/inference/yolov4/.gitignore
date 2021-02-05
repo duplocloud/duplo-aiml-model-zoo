@@ -14,3 +14,4 @@ data/
 *.log
 classes.names
 yolov4*
+myacc

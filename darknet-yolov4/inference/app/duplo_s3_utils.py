@@ -74,7 +74,9 @@ class DuploS3Utils:
             # subprocess.Popen(["/bin/bash", "/opt/ml/code/sync_s3_yolov4.sh", self.S3_BUCKET, self.WEIGHT_DIR])
             # result_cmd = subprocess.check_output(['/opt/ml/code/sync_s3_yolov4.sh', str(self.S3_BUCKET), str(self.WEIGHT_DIR)])
             # print(result_cmd)
-            os.system("/opt/ml/code/sync_s3_yolov4.sh {} {}".format(str(self.S3_BUCKET), str(self.WEIGHT_DIR)))
+            #self.exec_script("/opt/ml/code/app/sync_s3_yolov4.sh", self.S3_BUCKET, self.WEIGHT_DIR)
+            # os.system("/opt/ml/code/app/sync_s3_yolov4.sh {0} {1}".format( self.S3_BUCKET ,  self.WEIGHT_DIR ))
+            subprocess.call(('/opt/ml/code/app/sync_s3_yolov4.sh', self.S3_BUCKET ,  self.WEIGHT_DIR ))
             ## alternate way
             file_done = os.path.join(self.WEIGHT_DIR, "download_complete")
             if not os.path.exists(file_done):
@@ -117,8 +119,37 @@ class DuploS3Utils:
                     filewrite.write("done")
                     filewrite.close()
                 except Exception as e:
-                    print("duplo-yolov4-infer",'Error while loading model!!', e)
+                    print("duplo-yolov4-infer",'Error while loading model!! 1 ', e)
 
+
+    def exec_script(self, scriptfile, s3_url, local_path):
+        try:
+            # subprocess.call((scriptfile,  s3_url ,  local_path))
+            s_command ="{0} {1} {2}".format(scriptfile, s3_url, local_path)
+            p = subprocess.Popen(s_command, stdout=subprocess.PIPE, shell=True)
+            (output, err) = p.communicate()
+            p_status = p.wait()
+            print("Command output: ",  output)
+        except Exception as e:
+            print("duplo-yolov4-infer", 'Error while exec_script !! 2 ', e, scriptfile, s3_url, local_path)
+
+    def download_s3_image(self, s3_url, local_path):
+        self.exec_script("/opt/ml/code/app/image_s3_download.sh",s3_url ,local_path)
+        # bucket_path = s3_url.replace("s3://", "").strip()
+        # bucket_arr = bucket_path.split("/")
+        # bucket_name = bucket_arr[0]
+        # bucket_folder_name = ""
+        # if len(bucket_name) > 0:
+        #     bucket_arr2 = bucket_arr[1:]
+        #     bucket_folder_name = "/".join(bucket_arr2).strip()
+        # key = boto3.resource('s3').Object(bucket_name, bucket_folder_name).get()
+        # with open(local_path, 'w') as f:
+        #     for chunk in iter(lambda: key['Body'].read(4096), b''):
+        #         f.write(chunk)
+        f = open(local_path, 'rb')
+        image_bytes = f.read()
+        print("image_bytes")
+        return image_bytes
 
     def load_model(self):
         try:
@@ -129,7 +160,7 @@ class DuploS3Utils:
             net.setInputScale(1.0 / 255)
             net.setInputSwapRB(True)
         except Exception as e:
-            print("duplo-yolov4-infer", 'Error while loading model!!', e)
+            print("duplo-yolov4-infer", 'Error while loading model!! 3', e)
         return net
 
     def parse_class_names(self):
@@ -155,7 +186,7 @@ class DuploS3Utils:
             print("duplo-yolov4-infer",'Postprocessing Complete!', res, type(res))
             return [res]
         except Exception as e:
-            print("duplo-yolov4-infer",'Error while loading model!!', e)
+            print("duplo-yolov4-infer",'Error while loading model!! 4', e)
         return ["error in inference"]
 
 

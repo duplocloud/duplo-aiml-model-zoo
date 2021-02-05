@@ -13,6 +13,7 @@ import json
 from subprocess import Popen
 
 from .duplo_s3_utils import DuploS3Utils
+import tempfile
 sys.path.insert(1, '/opt/ml/code/')
 sys.path.insert(1, '.')
 
@@ -74,6 +75,24 @@ class ModelService(object):
     def handle(self, data, context):
         self._list_files()
         model_input = self.preprocess(data)
+        print("duplo-yolov4-infer",'MODEL INPUT')
+        out_classes, out_confidences , out_boxes =self.inference(model_input)
+        print("duplo-yolov4-infer",'Model Generated output!')
+        return self.postprocess(out_classes, out_confidences, out_boxes)
+
+    def handle_form_data(self, data, context):
+        self._list_files()
+        print("s3_url data ",  data.get("s3_url"))
+        ###
+        s3_url = data.get("s3_url")
+        print("s3_url", s3_url)
+        local_file = tempfile.NamedTemporaryFile() #dir="/tmp")
+        local_file_path = local_file.name
+        print("s3_url", s3_url,  "local_file_path",local_file_path)
+        image_data = self.s3_utils.download_s3_image(s3_url, local_file_path)
+        #os.remove(local_file_path)
+        ###
+        model_input = self.preprocess(image_data)
         print("duplo-yolov4-infer",'MODEL INPUT')
         out_classes, out_confidences , out_boxes =self.inference(model_input)
         print("duplo-yolov4-infer",'Model Generated output!')

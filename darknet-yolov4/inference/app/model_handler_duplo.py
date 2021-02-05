@@ -39,17 +39,25 @@ def ping():
 
 @app.route('/inference', methods=['POST'])
 def inference( ):
-    print("inference ==== content_type ", request.content_type)
-    print("inference ==== content_type ", request.headers)
-    # TODO; bsed on request.content_type --  json or binary image ?
-    # print("inference ==== ", request.data)
-    data = request.data
     if not _service.initialized:
         print("duplo-yolov4-infer", 'Service Not Initialized, Initializing...')
         _service.initialize(None)
-    resp = _service.handle(data, None)
-    print("inference ==== ", resp)
-    return jsonify(resp)
+    print("inference ==== content_type ", request.content_type)
+    print("inference ==== content_type ", request.headers)
+    content_type = request.content_type
+    if content_type == "application/json": #"application/x-www-form-urlencoded":
+        print("json inference ==== ", request.json)
+        data = request.json
+        resp = _service.handle_form_data(data, None)
+        print("json inference ==== ", resp)
+        return jsonify(resp)
+    elif content_type == "application/octet-stream":
+        # TODO; bsed on request.content_type --  json or binary image ?
+        print("stream inference ==== ", len(request.data))
+        data = request.data
+        resp = _service.handle(data, None)
+        print("stream inference ==== ", resp)
+        return jsonify(resp)
 
 if __name__ == '__main__':
     app.run()
