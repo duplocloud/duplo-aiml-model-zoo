@@ -37,14 +37,15 @@ RUN mkdir -p /opt/ml/model
 RUN mkdir -p /opt/ml/input/data/custom_data
 RUN mkdir -p /opt/ml/input/data/yolov4
 
-COPY *custom_data /opt/ml/input/data/custom_data/
-COPY *yolov4 /opt/ml/input/data/yolov4/
-COPY app $CODE_PATH/app
-COPY config/* $CODE_PATH/app
-COPY app/sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
+
+COPY sm/sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
 RUN chmod +x /usr/local/bin/dockerd-entrypoint.py
 
-
+COPY *custom_data /opt/ml/input/data/custom_data/
+COPY *yolov4 /opt/ml/input/data/yolov4/
+COPY sm/* $CODE_PATH/
+COPY config/* $CODE_PATH/
+#COPY *.sh $CODE_PATH/
 RUN chmod +x $CODE_PATH/*sh
 
 ENV PYTHONPATH=$CODE_PATH
