@@ -19,6 +19,42 @@ WEIGHTS_FILE_NAME="yolov4-train_final.weights"
 CLASS_NAMES_FILE="classes.names"  
 ```
  
+```shell script
+#JSON post
+ 
+curl -i -H "content-type: application/json"  -H "Accept: application/json" -H "X-HTTP-Method-Override: POST" -X POST -d  '{"image":"1.jpg","s3_url":"s3://duploservices-aiops-yolo-128329325849/inference/custom_data/images/069ee71de0456c3b_jpg.rf.db0e34dc33e401c42ae6066d63152134.jpg"}'  http://yolov4-aiops.poc.duplocloud.net/inference
+
+
+HTTP/1.1 200 OK
+Date: Fri, 05 Feb 2021 23:02:43 GMT
+Content-Type: application/json
+Content-Length: 91
+Connection: keep-alive
+Server: nginx
+
+[[{"class_name":"other","confidence":87,"text":"class_name = other, confidence = 87 % "}]]
+
+```
+
+
+```shell script
+#image post
+ 
+curl -i  -XPOST  --data-binary @"/Users/brighu/_duplo_code/duplo-aiml-model-zoo/tmp/darknet-yolov4/train/custom_data/images/00002.jpg" -H "Content-Type: application/octet-stream" http://yolov4-aiops.poc.duplocloud.net/inference
+
+HTTP/1.1 100 Continue
+
+HTTP/1.1 200 OK
+Date: Fri, 05 Feb 2021 23:04:47 GMT
+Content-Type: application/json
+Content-Length: 101
+Connection: keep-alive
+Server: nginx
+
+[[{"class_name":"mandatory","confidence":100,"text":"class_name = mandatory, confidence = 100 % "}]]
+
+
+```
 
 ```shell script
 aws ecr get-login 
@@ -36,9 +72,6 @@ sudo docker push  128329325849.dkr.ecr.us-west-2.amazonaws.com/aimodels:$dc
 echo 128329325849.dkr.ecr.us-west-2.amazonaws.com/aimodels:$dc
 echo  duplocloud/cuda:$dc
 #
-export s3_url=s3://duploservices-aiops-yolo-128329325849/inference/custom_data/images/069ee71de0456c3b_jpg.rf.db0e34dc33e401c42ae6066d63152134.jpg
-
-curl -i  -H "Accept: application/json" -H "X-HTTP-Method-Override: POST" -X POST -d  '{"image":"1.jpg","s3_url":"s3://duploservices-aiops-yolo-128329325849/inference/custom_data/images/069ee71de0456c3b_jpg.rf.db0e34dc33e401c42ae6066d63152134.jpg"}'  http://localhost:8080/inference
 
 #
 ```
