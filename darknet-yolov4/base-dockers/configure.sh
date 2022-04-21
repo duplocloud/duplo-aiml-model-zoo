@@ -53,7 +53,16 @@ function enable_arch() {
   sed -i -e "s/# ARCH= -gencode arch=compute_$1/ARCH= -gencode arch=compute_$1/g" $makefile
 }
 
+# OPENCV=1 GPU=1 AVX=1 OPENMP=1 CUDNN=1 CUDNN_HALF=0 OPENMP=1 LIBSO=1
 case ${tag} in
+"default")
+  enable_opencv
+  enable_gpu
+  enable_cudnn
+  enable_avx
+  enable_openmp
+  enable_libso
+  ;;
 "cpu" | "cpu-u1804")
   enable_avx
   enable_openmp

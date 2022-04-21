@@ -15,64 +15,65 @@ IMAGE_TRAIN=${IMAGE_PREFIX}_train_${IMAGE_VERSION}
 echo ${IMAGE_BASE}
 echo ${IMAGE_INFERENCE}
 echo ${IMAGE_TRAIN}
-#
-#cd base-dockers
-#
-##1
-#cd ../base-dockers
-#parent_image=$IMAGE_OS
-#build_image=$IMAGE_BASE
-#str_build="docker build  --build-arg BASE_CONTAINER=$parent_image  -f Dockerfile -t $build_image ."
-#echo "======  $str_build START======"
-#$str_build
-#retVal=$?
-#if [ $retVal -ne 0 ]; then
-#    echo "======  $str_build . ERROR======"
-#    exit $retVal
-#fi
-#echo "======  $str_build . END======\n\n\n"
-#sleep 5
-#
-#
-##2
-#cd ../inference;
-#parent_image=$IMAGE_BASE
-#build_image=$IMAGE_INFERENCE
-#str_build="docker build  --build-arg BASE_CONTAINER=$parent_image  -f Dockerfile -t $build_image ."
-#echo "======  $str_build START======"
-#$str_build
-#retVal=$?
-#if [ $retVal -ne 0 ]; then
-#    echo "======  $str_build . ERROR======"
-#    exit $retVal
-#fi
-#echo "======  $str_build . END======\n\n\n"
-#sleep 5
-#
-#
-##3
-#cd ../train
-#parent_image=$IMAGE_BASE
-#build_image=$IMAGE_TRAIN
-#str_build="docker build  --build-arg BASE_CONTAINER=$parent_image  -f Dockerfile -t $build_image ."
-#echo "======  $str_build START======"
-#$str_build
-#retVal=$?
-#if [ $retVal -ne 0 ]; then
-#    echo "======  $str_build . ERROR======"
-#    exit $retVal
-#fi
-#echo "======  $str_build . END======\n\n\n"
-#sleep 5
-#
-#
-#
-#
-#echo ${IMAGE_BASE}
-#echo ${IMAGE_INFERENCE}
-#echo ${IMAGE_TRAIN}
-#
-#
+
+
+cd base-dockers
+
+#1
+cd ../base-dockers
+parent_image=$IMAGE_OS
+build_image=$IMAGE_BASE
+str_build="docker build  --build-arg BASE_CONTAINER=$parent_image  -f Dockerfile -t $build_image ."
+echo "======  $str_build START======"
+$str_build
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    echo "======  $str_build . ERROR======"
+    exit $retVal
+fi
+echo "======  $str_build . END======\n\n\n"
+sleep 5
+
+
+#2
+cd ../inference;
+parent_image=$IMAGE_BASE
+build_image=$IMAGE_INFERENCE
+str_build="docker build  --build-arg BASE_CONTAINER=$parent_image  -f Dockerfile -t $build_image ."
+echo "======  $str_build START======"
+$str_build
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    echo "======  $str_build . ERROR======"
+    exit $retVal
+fi
+echo "======  $str_build . END======\n\n\n"
+sleep 5
+
+
+#3
+cd ../train
+parent_image=$IMAGE_BASE
+build_image=$IMAGE_TRAIN
+str_build="docker build  --build-arg BASE_CONTAINER=$parent_image  -f Dockerfile -t $build_image ."
+echo "======  $str_build START======"
+$str_build
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    echo "======  $str_build . ERROR======"
+    exit $retVal
+fi
+echo "======  $str_build . END======\n\n\n"
+sleep 5
+
+
+
+
+echo ${IMAGE_BASE}
+echo ${IMAGE_INFERENCE}
+echo ${IMAGE_TRAIN}
+
+
 #
 ##6
 #echo "======  docker push $IMAGE_BASE START======"
@@ -103,8 +104,8 @@ echo ${IMAGE_TRAIN}
 #    exit $retVal
 #fi
 #echo "======  docker push $IMAGE_TRAIN DONE======"
-#
-#echo ${IMAGE_BASE}
-#echo ${IMAGE_INFERENCE}
-#echo ${IMAGE_TRAIN}
+
+echo ${IMAGE_BASE}
+echo ${IMAGE_INFERENCE}
+echo ${IMAGE_TRAIN}
 
