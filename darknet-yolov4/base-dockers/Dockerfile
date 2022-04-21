@@ -1,150 +1,53 @@
-#FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
-#FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
-#FROM nvidia/cuda:10.2-cudnn7-devel-ubuntu18.04
 
-FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
+ARG BASE_CONTAINER=nvidia/cuda:11.2.2-cudnn8-devel-ubuntu20.04
+ARG BUILDER_IMAGE=$BASE_CONTAINER
+ARG BASE_IMAGE=$BASE_CONTAINER
 
-# docker build -t  duplocloud/cuda:11.0-cdnn8-ubuntu18.04-v2 .
-# docker build -t  duplocloud/cuda:11.1.1-cdnn8-ubuntu20.04-v3 .
+FROM $BUILDER_IMAGE AS builder
 
-ARG DEBIAN_FRONTEND=noninteractive
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
+ENV DEBIAN_FRONTEND noninteractive
 
-ENV CODE_PATH=/opt/ml/code
-ENV MODEL_PATH=/opt/ml/model
-ENV INPUT_PATH=/opt/ml/input
+RUN apt-get update \
+    && apt-get install --no-install-recommends --no-install-suggests -y gnupg2 ca-certificates git build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
+COPY configure.sh /tmp/
 
-RUN mkdir -p /opt/ml/code
-RUN mkdir -p /opt/ml/model/backup
-RUN mkdir -p /opt/ml/input/data/custom_data
+ARG SOURCE_BRANCH=unspecified
+ENV SOURCE_BRANCH $SOURCE_BRANCH
 
+ARG SOURCE_COMMIT=unspecified
+ENV SOURCE_COMMIT $SOURCE_COMMIT
 
-RUN apt update
-RUN apt install -y \
-    wget git vim curl zip  jq net-tools \
-    pkg-config  build-essential cmake autoconf automake \
-    clang-format  apt-utils \
-    checkinstall libtool  yasm gnupg-agent \
-    apt-transport-https  ca-certificates software-properties-common libopencv-dev
+ARG CONFIG
 
-RUN apt-get clean autoclean
-RUN apt-get autoremove --yes
-RUN apt-get clean
-############################################
-RUN apt-get update && apt-get install -y python3  python3-pip
-RUN pip3 install scikit-build
-RUN pip3 install --upgrade cython
-RUN pip3 install --upgrade cython
-RUN pip3 install opencv-python
-RUN  python3 --version
-############################################
-############################################
-# Get OpenCV dependencies
-RUN apt-get update && apt-get install -y \
-    gfortran libjpeg8-dev libtiff5-dev libavcodec-dev libavformat-dev \
-    libswscale-dev libdc1394-22-dev libxine2-dev libv4l-dev \
-    qt5-default libgtk2.0-dev libtbb-dev libatlas-base-dev \
-    libfaac-dev libmp3lame-dev libtheora-dev libvorbis-dev libxvidcore-dev libopencore-amrnb-dev \
-    libopencore-amrwb-dev x264 v4l-utils libprotobuf-dev protobuf-compiler libgoogle-glog-dev \
-    libgflags-dev libgphoto2-dev
-RUN apt-get clean autoclean
-RUN apt-get autoremove --yes
-RUN apt-get clean
-############################################
-# build darknet
-WORKDIR /opt/ml/code
-RUN git clone https://github.com/AlexeyAB/darknet.git ./
-#RUN make OPENCV=1 GPU=1 AVX=1 OPENMP=1 CUDNN=1 CUDNN_HALF=0 OPENMP=1 -j $(nproc)
-#RUN make   GPU=1   CUDNN=1 OPENCV=1
-RUN make OPENCV=1 GPU=1 AVX=1 OPENMP=1 CUDNN=1 CUDNN_HALF=0 OPENMP=1 LIBSO=1
-RUN chmod +x darknet
-############################################
+RUN git clone https://github.com/AlexeyAB/darknet.git && cd darknet \
+    && git checkout $SOURCE_BRANCH \
+    && git reset --hard $SOURCE_COMMIT \
+    && /tmp/configure.sh $CONFIG && make \
+    && cp libdarknet.so /tmp \
+    && cp darknet.py /tmp \
+    && cd .. && rm -rf darknet
 
-######
-# build opencv
-RUN cd /opt && git clone --verbose https://github.com/opencv/opencv.git -b 4.4.0 &&\
-    cd /opt && wget https://github.com/opencv/opencv_contrib/archive/4.4.0.tar.gz &&\
-    mkdir opencv_contrib && tar -xf 4.4.0.tar.gz -C opencv_contrib --strip-components 1
-RUN cd /opt/opencv && mkdir release && cd release && \
-         cmake -G "Unix Makefiles" \
-        -DENABLE_PRECOMPILED_HEADERS=OFF \
-        -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
-        -DCMAKE_C_COMPILER=/usr/bin/gcc \
-        -DCMAKE_BUILD_TYPE=RELEASE \
-        -DCMAKE_INSTALL_PREFIX=/usr/local \
-        -DWITH_TBB=ON \
-        -DBUILD_NEW_PYTHON_SUPPORT=ON \
-        -DWITH_V4L=ON \
-        -DINSTALL_C_EXAMPLES=OFF \
-        -DINSTALL_PYTHON_EXAMPLES=ON \
-        -DBUILD_EXAMPLES=OFF \
-        -DWITH_QT=ON \
-        -DWITH_OPENGL=ON \
-        -DWITH_CUDA=ON \
-        -DWITH_CUDNN=ON \
-        -DCUDA_ARCH_BIN=70 \
-        -DOPENCV_DNN_CUDA=ON \
-        -DCUDA_GENERATION=Auto \
-        -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
-        .. &&\
-        make -j"$(nproc)"  && \
-        make install && \
-        ldconfig &&\
-        cd /opt/opencv/release && make clean
+FROM $BASE_IMAGE
 
-########## moved to base #####
-RUN pip3 install sagemaker-containers
-##########
-ENV RUSTUP_HOME=/usr/local/rustup
-ENV CARGO_HOME=/usr/local/cargo
-ENV PATH=/usr/local/cargo/bin:$PATH:$HOME/.cargo/bin
-RUN set -eux; \
-    url="https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init"; \
-    wget "$url"; \
-    chmod +x rustup-init; \
-    ./rustup-init -y --no-modify-path --default-toolchain nightly; \
-    rm rustup-init; \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME;
-RUN  rustup --version;
-RUN  cargo --version;
-RUN  rustc --version;
+ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt update -y; apt-get install -y clang
-RUN pip3 install darknetpy
-########## moved to base #####
+RUN apt-get update \
+    && apt-get install --no-install-recommends --no-install-suggests -y libsm6 libxext6 libxrender-dev ffmpeg \
+       python3 python3-pip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-###########################################
-RUN pip3 list
-COPY ./requirements.txt .
-RUN  python3 --version
-RUN pip3 install -r requirements.txt
-###########################################
+RUN python3 -m pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir numpy opencv-python
 
+COPY --from=builder /tmp/libdarknet.so /usr/local/darknet/libdarknet.so
+COPY --from=builder /tmp/darknet.py /usr/local/darknet/darknet.py
 
-######
-# check : reduce docker size ?
-#RUN df -h
-#RUN du -h -d 1 /opt
-######
-RUN apt-get clean autoclean
-RUN apt-get autoremove --yes
-RUN rm -rf /var/lib/{apt,dpkg,cache,log}/
-RUN rm -rf /var/lib/apt/lists/*
-RUN touch /tmp/aa
+ENV DARKNET_PATH=/usr/local/darknet
+ENV PYTHONPATH "${PYTHONPATH}:/usr/local/darknet"
 
-################
-RUN pip3 list
-###########################################
-RUN ls /opt/ml/code/
-WORKDIR /opt/ml/code
-ENV LIBRARY_PATH ./:/usr/local/lib:$LIBRARY_PATH
-#keep the relevent one below
-ENV LD_LIBRARY_PATH=/usr/local/cuda-10.1/lib64:/usr/local/cuda-10.1/bin:/usr/local/cuda-10.1/targets/x86_64-linux/lib/:/usr/local/cuda-10.1/compat/:$LD_LIBRARY_PATH
-ENV LD_LIBRARY_PATH=/usr/local/cuda-11.1.1/lib64:/usr/local/cuda-11.1.1/bin:/usr/local/cuda-11.1.1/targets/x86_64-linux/lib/:/usr/local/cuda-11.1.1/compat/:$LD_LIBRARY_PATH
-ENV LD_LIBRARY_PATH=/usr/local/cuda-11.1/lib64:/usr/local/cuda-11.1/bin:/usr/local/cuda-11.1/targets/x86_64-linux/lib/:/usr/local/cuda-11.1/compat/:$LD_LIBRARY_PATH
-ENV LD_LIBRARY_PATH=/usr/local/cuda-11.0/lib64:/usr/local/cuda-11.0/bin:/usr/local/cuda-11.0/targets/x86_64-linux/lib/:/usr/local/cuda-11.0/compat/:$LD_LIBRARY_PATH
-ENV LD_LIBRARY_PATH=/usr/local/cuda-11.2/lib64:/usr/local/cuda-10.2/bin:/usr/local/cuda-10.2/targets/x86_64-linux/lib/:/usr/local/cuda-10.2/compat/:$LD_LIBRARY_PATH
-ENV PATH=$PATH:/opt/VirtualGL/bin
+CMD ["python3"]
 

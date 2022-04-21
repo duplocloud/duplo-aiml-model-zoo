@@ -1,10 +1,11 @@
+ARG BUILDER_IMAGE=duplocloud/anyservice:cuda-11.2.2-cudnn8-devel-ubuntu20.04_base_v1
+FROM $BUILDER_IMAGE
+
 #FROM duplocloud/cuda:11.1.1-cdnn8-ubuntu20.04-v1
 #FROM duplocloud/cuda:11.0-cdnn8-ubuntu18.04-v1
 #FROM duplocloud/cuda:11.0-cdnn8-ubuntu18.04-v2
 #FROM duplocloud/cuda:11.1.1-cdnn8-ubuntu20.04-v2
 #FROM duplocloud/cuda:11.1.1-cdnn8-ubuntu20.04-v3
-
-FROM duplocloud/cuda:11.0-cdnn8-ubuntu18.04-v3
 
 #
 #export dc=11.0-cdnn8-ubuntu18.04-sm-infer-v4
