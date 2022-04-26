@@ -1,0 +1,12 @@
+flask
+requests
+retrying
+Pillow
+sagemaker-inference
+multi-model-server
+mxnet
+boto3
+uwsgi
+
+#opencv-python
+#numpy

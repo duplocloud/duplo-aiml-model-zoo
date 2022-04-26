@@ -1,0 +1,11 @@
+{
+ "argv": [
+  "/home/ubuntu/miniconda3/envs/cnn/bin/python",
+  "-m",
+  "ipykernel_launcher",
+  "-f",
+  "{connection_file}"
+ ],
+ "display_name": "CNN",
+ "language": "python"
+}

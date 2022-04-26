@@ -1,0 +1,68 @@
+FROM duplocloud/cuda:cpu-only-ubuntu20.04-v1
+
+LABEL com.amazonaws.sagemaker.capabilities.multi-models=true
+LABEL com.amazonaws.sagemaker.capabilities.accept-bind-to-port=true
+
+############
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends \
+    openjdk-8-jdk-headless
+############
+RUN pip3 --no-cache-dir install mxnet \
+                                multi-model-server \
+                                sagemaker-inference \
+                                retrying awscli
+############
+COPY requirements.txt /requirements.txt
+RUN pip3 install -r /requirements.txt
+
+# code and data files
+ENV CODE_PATH=/opt/ml/code
+ENV MODEL_PATH=/opt/ml/model
+ENV INPUT_PATH=/opt/ml/input/data
+
+ARG TRAIN_CHANNEL=custom_data
+ARG WEIGHT_CHANNEL=yolov4
+
+ENV TRAIN_DIR $INPUT_PATH/$TRAIN_CHANNEL
+ENV WEIGHT_DIR $INPUT_PATH/$WEIGHT_CHANNEL
+
+RUN echo $TRAIN_DIR
+RUN echo $WEIGHT_DIR
+
+RUN mkdir -p /opt/ml/code
+RUN mkdir -p /opt/ml/model
+RUN mkdir -p /opt/ml/input/data/custom_data
+RUN mkdir -p /opt/ml/input/data/yolov4
+
+#
+COPY sm $CODE_PATH/app
+COPY sm/sagemaker_serve.py /usr/local/bin/dockerd-entrypoint.py
+RUN chmod +x /usr/local/bin/dockerd-entrypoint.py
+
+#
+COPY *custom_data /opt/ml/input/data/custom_data/
+COPY *yolov4 /opt/ml/input/data/yolov4/
+#
+COPY app $CODE_PATH/app
+RUN chmod 777 $CODE_PATH/app/*.sh
+
+
+###########
+RUN useradd --no-create-home nginx
+COPY config/nginx.conf /etc/nginx/
+COPY config/website_model_service.conf /etc/nginx/conf.d/
+COPY config/uwsgi.ini /etc/uwsgi/
+COPY config/supervisord.conf /etc/supervisor/
+ENV PYTHONPATH=$CODE_PATH
+ENV PYTHONUNBUFFERED=TRUE
+ENV PYTHONDONTWRITEBYTECODE=TRUE
+#########
+
+RUN rm /etc/nginx/sites-enabled/default
+RUN rm -r /root/.cache
+
+#
+CMD ["/usr/bin/supervisord"]
+
+
