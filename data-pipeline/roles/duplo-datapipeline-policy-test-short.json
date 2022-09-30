@@ -1,0 +1,48 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "iam:CreateServiceLinkedRole",
+            "Resource": "*",
+            "Condition": {
+                "StringLike": {
+                    "iam:AWSServiceName": [
+                        "elasticmapreduce.amazonaws.com",
+                        "datapipeline.amazonaws.com",
+                        "sns.amazonaws.com",
+                        "spot.amazonaws.com"
+                    ]
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "datapipeline:*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "elasticmapreduce:*"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Action": "s3:*",
+            "Effect": "Allow",
+            "Resource": [
+                "arn:aws:s3:::us-west-2.elasticmapreduce",
+                "arn:aws:s3:::us-west-2.elasticmapreduce/*",
+                "arn:aws:s3:::datapipeline-us-west-2",
+                "arn:aws:s3:::datapipeline-us-west-2/*"
+            ]
+        }
+    ]
+}
