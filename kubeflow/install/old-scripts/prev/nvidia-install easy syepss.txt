@@ -1,0 +1,63 @@
+sudo vi /etc/modprobe.d/blacklist-nouveau.conf 
+blacklist nouveau
+options nouveau modeset=0
+
+
+sudo add-apt-repository ppa:graphics-drivers/ppa
+sudo apt upgrade
+sudo apt update 
+sudo reboot
+
+
+sudo ubuntu-drivers devices
+ sudo ubuntu-drivers autoinstall
+
+
+////////////////////
+
+
+sudo apt purge “*nvidia*”
+sudo apt purge “*cuda*”
+
+
+rm /etc/apt/sources.list.d/cuda*
+apt remove --autoremove nvidia-cuda-toolkit
+apt remove --autoremove nvidia-*
+sudo apt-get remove --purge '^nvidia-.*
+apt-get purge nvidia*
+apt-get autoremove
+apt-get autoclean
+rm -rf /usr/local/cuda*
+
+
+
+sudo rm -rf /usr/local/cuda10.x
+
+https://gist.github.com/Artiume/e5a88c0370c06f972cc7b9d95f990b6b
+
+
+
+https://www.linuxbabe.com/ubuntu/install-nvidia-driver-ubuntu
+
+
+
+sudo vi /etc/modprobe.d/blacklist-nouveau.conf 
+
+blacklist nouveau
+options nouveau modeset=0
+
+sudo update-initramfs -u
+sudo reboot 
+
+sudo ubuntu-drivers devices
+
+sudo add-apt-repository ppa:graphics-drivers/ppa
+
+sudo ubuntu-drivers devices
+
+udo apt upgrade
+
+# sudo apt install nvidia-driver-version-number
+
+sudo ubuntu-drivers autoinstall
+
