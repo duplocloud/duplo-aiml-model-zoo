@@ -1,7 +1,6 @@
 import pathlib
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import numpy as np
 from tensorflow.keras.preprocessing import image_dataset_from_directory
 import os
 
@@ -37,10 +36,6 @@ def train_model(preprocess_input, base_model, model_name, train_dataset, validat
         print(f"Feature batch shape: {feature_batch.shape}")
 
         base_model.trainable = False
-        fine_tune_at = 8
-        for layer in base_model.layers[:fine_tune_at]:
-            layer.trainable = False
-
         base_model.summary()
 
         global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
@@ -75,39 +70,34 @@ def train_model(preprocess_input, base_model, model_name, train_dataset, validat
         history = model.fit(train_dataset, epochs=epochs, validation_data=validation_dataset,
                             callbacks=[early_stop])
 
-        # base_model.trainable = True
-        # print(f"Number of layers in the base model: {len(base_model.layers)}")
-        #
-        # fine_tune_at = 100
-        # for layer in base_model.layers[:fine_tune_at]:
-        #     layer.trainable = False
-        #
-        # model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        #               optimizer=tf.keras.optimizers.RMSprop(learning_rate=base_learning_rate / 10),
-        #               metrics=["accuracy"])
-        # model.summary()
-        # print(f"Length of trainable variables in the model: {len(model.trainable_variables)}")
-        #
-        # history_fine = model.fit(train_dataset, epochs=epochs, initial_epoch=history.epoch[-1],
-        #                          validation_data=validation_dataset, callbacks=[early_stop])
-        # initial_epochs = history.epoch[-1]
+        base_model.trainable = True
+        print(f"Number of layers in the base model: {len(base_model.layers)}")
+
+        fine_tune_at = 100
+        for layer in base_model.layers[:fine_tune_at]:
+            layer.trainable = False
+
+        model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                      optimizer=tf.keras.optimizers.RMSprop(learning_rate=base_learning_rate / 10),
+                      metrics=["accuracy"])
+        model.summary()
+        print(f"Length of trainable variables in the model: {len(model.trainable_variables)}")
+
+        history_fine = model.fit(train_dataset, epochs=epochs, initial_epoch=history.epoch[-1],
+                                 validation_data=validation_dataset, callbacks=[early_stop])
+        initial_epochs = history.epoch[-1]
         # overwrite
         model.save(model_path)
-        # acc = history.history["accuracy"] + history_fine.history["accuracy"]
-        # val_acc = history.history["val_accuracy"] + history_fine.history["val_accuracy"]
-        # loss = history.history["loss"] + history_fine.history["loss"]
-        # val_loss = history.history["val_loss"] + history_fine.history["val_loss"]
-
-        acc = history.history["accuracy"]
-        val_acc = history.history["val_accuracy"]
-        loss = history.history["loss"]
-        val_loss = history.history["val_loss"]
+        acc = history.history["accuracy"] + history_fine.history["accuracy"]
+        val_acc = history.history["val_accuracy"] + history_fine.history["val_accuracy"]
+        loss = history.history["loss"] + history_fine.history["loss"]
+        val_loss = history.history["val_loss"] + history_fine.history["val_loss"]
 
         plt.figure(figsize=(9, 9))
         plt.subplot(2, 1, 1)
         plt.plot(acc, label="Training Accuracy")
         plt.plot(val_acc, label="Validation Accuracy")
-        # plt.plot([initial_epochs - 1, initial_epochs - 1], plt.ylim(), label="Start Fine Tuning")
+        plt.plot([initial_epochs - 1, initial_epochs - 1], plt.ylim(), label="Start Fine Tuning")
         plt.legend(loc="lower right")
         plt.ylabel("Accuracy")
         plt.xlabel("epoch")
@@ -115,7 +105,7 @@ def train_model(preprocess_input, base_model, model_name, train_dataset, validat
         plt.subplot(2, 1, 2)
         plt.plot(loss, label="Training Loss")
         plt.plot(val_loss, label="Validation Loss")
-        # plt.plot([initial_epochs - 1, initial_epochs - 1], plt.ylim(), label="Start Fine Tuning")
+        plt.plot([initial_epochs - 1, initial_epochs - 1], plt.ylim(), label="Start Fine Tuning")
         plt.legend(loc="upper right")
         plt.ylabel("Cross Entropy")
         plt.title(f"{model_name} Training and Validation Loss")
