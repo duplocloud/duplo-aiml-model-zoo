@@ -1,165 +1,172 @@
-# Sample code from the TorchVision 0.3 Object Detection Finetuning Tutorial
-# http://pytorch.org/tutorials/intermediate/torchvision_tutorial.html
-
+import pathlib
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras.preprocessing import image_dataset_from_directory
 import os
-import numpy as np
-import torch
-from PIL import Image
 
-import torchvision
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
+# map to external drive
+MAPPED_PATH = os.getenv("MAPPED_PATH", default = "../data")
 
-from engine import train_one_epoch, evaluate
-import utils
-import transforms as T
+# all data is within this folder ../data
+data_root_path = pathlib.Path(MAPPED_PATH)
+data_dir = f"{data_root_path}/images"
+models_dir = f"{data_root_path}/models"
+training_information_dir = f"{data_root_path}/training_information"
 
+model_name="MobileNetV3(small)"
+BATCH_SIZE = 32
+IMG_SIZE = (224, 224)
+seed = 123
+EPOCHS = 50  # 1000
 
-class PennFudanDataset(object):
-    def __init__(self, root, transforms):
-        self.root = root
-        self.transforms = transforms
-        # load all image files, sorting them to
-        # ensure that they are aligned
-        self.imgs = list(sorted(os.listdir(os.path.join(root, "PNGImages"))))
-        self.masks = list(sorted(os.listdir(os.path.join(root, "PedMasks"))))
+def train_model(preprocess_input, base_model, model_name, train_dataset, validation_dataset, num_classes, img_shape,
+                data_augmentation, class_names, epochs):
 
-    def __getitem__(self, idx):
-        # load images and masks
-        img_path = os.path.join(self.root, "PNGImages", self.imgs[idx])
-        mask_path = os.path.join(self.root, "PedMasks", self.masks[idx])
-        img = Image.open(img_path).convert("RGB")
-        # note that we haven't converted the mask to RGB,
-        # because each color corresponds to a different instance
-        # with 0 being background
-        mask = Image.open(mask_path)
+    model_original_path = f"{models_dir}/{model_name}_original.h5" # do not overwrite for now
+    model_path = f"{models_dir}/{model_name}.h5"
 
-        mask = np.array(mask)
-        # instances are encoded as different colors
-        obj_ids = np.unique(mask)
-        # first id is the background, so remove it
-        obj_ids = obj_ids[1:]
+    try:
+        model = tf.keras.models.load_model(model_original_path)
+        model.summary()
+    except Exception as e:
+        print(e)
 
-        # split the color-encoded mask into a set
-        # of binary masks
-        masks = mask == obj_ids[:, None, None]
+        image_batch, label_batch = next(iter(train_dataset))
+        feature_batch = base_model(image_batch)
+        print(f"Feature batch shape: {feature_batch.shape}")
 
-        # get bounding box coordinates for each mask
-        num_objs = len(obj_ids)
-        boxes = []
-        for i in range(num_objs):
-            pos = np.where(masks[i])
-            xmin = np.min(pos[1])
-            xmax = np.max(pos[1])
-            ymin = np.min(pos[0])
-            ymax = np.max(pos[0])
-            boxes.append([xmin, ymin, xmax, ymax])
+        base_model.trainable = False
+        base_model.summary()
 
-        boxes = torch.as_tensor(boxes, dtype=torch.float32)
-        # there is only one class
-        labels = torch.ones((num_objs,), dtype=torch.int64)
-        masks = torch.as_tensor(masks, dtype=torch.uint8)
+        global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
+        feature_batch_average = global_average_layer(feature_batch)
+        print(f"Feature batch average shape: {feature_batch_average.shape}")
 
-        image_id = torch.tensor([idx])
-        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-        # suppose all instances are not crowd
-        iscrowd = torch.zeros((num_objs,), dtype=torch.int64)
+        prediction_layer = tf.keras.layers.Dense(num_classes)
+        prediction_batch = prediction_layer(feature_batch_average)
+        print(f"Prediction batch shape: {prediction_batch.shape}")
 
-        target = {}
-        target["boxes"] = boxes
-        target["labels"] = labels
-        target["masks"] = masks
-        target["image_id"] = image_id
-        target["area"] = area
-        target["iscrowd"] = iscrowd
+        inputs = tf.keras.Input(shape=img_shape)
+        x = data_augmentation(inputs)
+        x = preprocess_input(x)
+        x = base_model(x, training=False)
+        x = global_average_layer(x)
+        x = tf.keras.layers.Dropout(0.2)(x)
+        outputs = prediction_layer(x)
+        model = tf.keras.Model(inputs, outputs)
 
-        if self.transforms is not None:
-            img, target = self.transforms(img, target)
+        base_learning_rate = 0.0001
+        model.compile(optimizer=tf.keras.optimizers.RMSprop(learning_rate=base_learning_rate),
+                      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=["accuracy"])
+        model.summary()
+        print(f"Length of trainable variables in the model: {len(model.trainable_variables)}")  # 훈련 가능한 객체 수를 확인한다.
 
-        return img, target
+        loss0, accuracy0 = model.evaluate(validation_dataset)
+        print(f"initial loss: {loss0}")
+        print(f"initial accuracy: {accuracy0}")
 
-    def __len__(self):
-        return len(self.imgs)
+        early_stop = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
+                                                      patience=10)
+        history = model.fit(train_dataset, epochs=epochs, validation_data=validation_dataset,
+                            callbacks=[early_stop])
 
-def get_model_instance_segmentation(num_classes):
-    # load an instance segmentation model pre-trained pre-trained on COCO
-    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
+        base_model.trainable = True
+        print(f"Number of layers in the base model: {len(base_model.layers)}")
 
-    # get number of input features for the classifier
-    in_features = model.roi_heads.box_predictor.cls_score.in_features
-    # replace the pre-trained head with a new one
-    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+        fine_tune_at = 100
+        for layer in base_model.layers[:fine_tune_at]:
+            layer.trainable = False
 
-    # now get the number of input features for the mask classifier
-    in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
-    hidden_layer = 256
-    # and replace the mask predictor with a new one
-    model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,
-                                                       hidden_layer,
-                                                       num_classes)
+        model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                      optimizer=tf.keras.optimizers.RMSprop(learning_rate=base_learning_rate / 10),
+                      metrics=["accuracy"])
+        model.summary()
+        print(f"Length of trainable variables in the model: {len(model.trainable_variables)}")  # 훈련 가능한 객체 수를 확인한다.
+
+        history_fine = model.fit(train_dataset, epochs=epochs, initial_epoch=history.epoch[-1],
+                                 validation_data=validation_dataset, callbacks=[early_stop])  # 미세 조정된 모델로 훈련을 계속한다.
+        initial_epochs = history.epoch[-1]
+        # overwrite
+        model.save(model_path)
+        acc = history.history["accuracy"] + history_fine.history["accuracy"]
+        val_acc = history.history["val_accuracy"] + history_fine.history["val_accuracy"]
+        loss = history.history["loss"] + history_fine.history["loss"]
+        val_loss = history.history["val_loss"] + history_fine.history["val_loss"]
+
+        plt.figure(figsize=(9, 9))
+        plt.subplot(2, 1, 1)
+        plt.plot(acc, label="Training Accuracy")
+        plt.plot(val_acc, label="Validation Accuracy")
+        plt.plot([initial_epochs - 1, initial_epochs - 1], plt.ylim(), label="Start Fine Tuning")
+        plt.legend(loc="lower right")
+        plt.ylabel("Accuracy")
+        plt.xlabel("epoch")
+        plt.title(f"{model_name} Training and Validation Accuracy")
+        plt.subplot(2, 1, 2)
+        plt.plot(loss, label="Training Loss")
+        plt.plot(val_loss, label="Validation Loss")
+        plt.plot([initial_epochs - 1, initial_epochs - 1], plt.ylim(), label="Start Fine Tuning")
+        plt.legend(loc="upper right")
+        plt.ylabel("Cross Entropy")
+        plt.title(f"{model_name} Training and Validation Loss")
+        plt.xlabel("epoch")
+        plt.tight_layout()
+        plt.savefig(f"{training_information_dir}/3_{model_name}_history.png")
+        plt.close()
+
+    loss, accuracy = model.evaluate(validation_dataset)
+    print(f"Validation loss: {loss}")
+    print(f"Validation accuracy: {accuracy}")
+
+    image_batch, label_batch = validation_dataset.as_numpy_iterator().next()
+    predictions = model.predict_on_batch(image_batch)
+    predictions = tf.nn.softmax(predictions)
+    print(f"Predictions:\n{predictions.numpy()}")
+    print(f"Labels:\n{label_batch}")
+
+    plt.figure(figsize=(9, 9))
+    for i in range(9):
+        plt.subplot(3, 3, i + 1)
+        plt.imshow(image_batch[i].astype("uint8"))
+        plt.title(
+            f"{class_names[np.argmax(predictions[i])]} {100 * np.max(predictions[i]):.2f}% ({class_names[label_batch[i]]})")
+        plt.axis("off")
+    plt.tight_layout()
+    plt.savefig(f"{training_information_dir}/4_{model_name}_predictions.png")
+    plt.close()
 
     return model
 
+train_dataset = image_dataset_from_directory(data_dir, validation_split=0.2, subset="training", seed=seed,
+                                             image_size=IMG_SIZE, batch_size=BATCH_SIZE)
 
-def get_transform(train):
-    transforms = []
-    transforms.append(T.ToTensor())
-    if train:
-        transforms.append(T.RandomHorizontalFlip(0.5))
-    return T.Compose(transforms)
+validation_dataset = image_dataset_from_directory(data_dir, validation_split=0.2, subset="validation", seed=seed,
+                                                  image_size=IMG_SIZE, batch_size=BATCH_SIZE)
 
+class_names = train_dataset.class_names
+print(f"Class names: {class_names}")
 
-def main():
-    # train on the GPU or on the CPU, if a GPU is not available
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+AUTOTUNE = tf.data.AUTOTUNE
+train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
+validation_dataset = validation_dataset.prefetch(buffer_size=AUTOTUNE)
 
-    # our dataset has two classes only - background and person
-    num_classes = 2
-    # use our dataset and defined transformations
-    dataset = PennFudanDataset('PennFudanPed', get_transform(train=True))
-    dataset_test = PennFudanDataset('PennFudanPed', get_transform(train=False))
+data_augmentation = tf.keras.Sequential([
+    tf.keras.layers.experimental.preprocessing.RandomFlip('horizontal'),
+    tf.keras.layers.experimental.preprocessing.RandomRotation(0.2),
+])
 
-    # split the dataset in train and test set
-    indices = torch.randperm(len(dataset)).tolist()
-    dataset = torch.utils.data.Subset(dataset, indices[:-50])
-    dataset_test = torch.utils.data.Subset(dataset_test, indices[-50:])
+IMG_SHAPE = IMG_SIZE + (3,)
+num_classes = len(class_names)
 
-    # define training and validation data loaders
-    data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=2, shuffle=True, num_workers=4,
-        collate_fn=utils.collate_fn)
-
-    data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=1, shuffle=False, num_workers=4,
-        collate_fn=utils.collate_fn)
-
-    # get the model using our helper function
-    model = get_model_instance_segmentation(num_classes)
-
-    # move model to the right device
-    model.to(device)
-
-    # construct an optimizer
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=0.005,
-                                momentum=0.9, weight_decay=0.0005)
-    # and a learning rate scheduler
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-                                                   step_size=3,
-                                                   gamma=0.1)
-
-    # let's train it for 10 epochs
-    num_epochs = 10
-
-    for epoch in range(num_epochs):
-        # train for one epoch, printing every 10 iterations
-        train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
-        # update the learning rate
-        lr_scheduler.step()
-        # evaluate on the test dataset
-        evaluate(model, data_loader_test, device=device)
-
-    print("That's it!")
-    
-if __name__ == "__main__":
-    main()
+train_model(
+    tf.keras.applications.mobilenet.preprocess_input,
+    tf.keras.applications.MobileNet(alpha=0.25, input_shape=IMG_SHAPE, include_top=False, weights='imagenet'),
+    model_name,
+    train_dataset,
+    validation_dataset,
+    num_classes,
+    IMG_SHAPE,
+    data_augmentation,
+    class_names,
+    EPOCHS
+)
