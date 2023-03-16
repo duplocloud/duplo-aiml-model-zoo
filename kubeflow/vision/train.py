@@ -41,6 +41,9 @@ def train_model(preprocess_input, base_model, model_name, train_dataset, validat
         for layer in base_model.layers[:fine_tune_at]:
             layer.trainable = False
 
+        # for variable in model.trainable_variables:
+        #     print(variable.name)
+
         base_model.summary()
 
         global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
@@ -75,28 +78,9 @@ def train_model(preprocess_input, base_model, model_name, train_dataset, validat
         history = model.fit(train_dataset, epochs=epochs, validation_data=validation_dataset,
                             callbacks=[early_stop])
 
-        # base_model.trainable = True
-        # print(f"Number of layers in the base model: {len(base_model.layers)}")
-        #
-        # fine_tune_at = 100
-        # for layer in base_model.layers[:fine_tune_at]:
-        #     layer.trainable = False
-        #
-        # model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        #               optimizer=tf.keras.optimizers.RMSprop(learning_rate=base_learning_rate / 10),
-        #               metrics=["accuracy"])
-        # model.summary()
-        # print(f"Length of trainable variables in the model: {len(model.trainable_variables)}")
-        #
-        # history_fine = model.fit(train_dataset, epochs=epochs, initial_epoch=history.epoch[-1],
-        #                          validation_data=validation_dataset, callbacks=[early_stop])
-        # initial_epochs = history.epoch[-1]
+
         # overwrite
         model.save(model_path)
-        # acc = history.history["accuracy"] + history_fine.history["accuracy"]
-        # val_acc = history.history["val_accuracy"] + history_fine.history["val_accuracy"]
-        # loss = history.history["loss"] + history_fine.history["loss"]
-        # val_loss = history.history["val_loss"] + history_fine.history["val_loss"]
 
         acc = history.history["accuracy"]
         val_acc = history.history["val_accuracy"]
