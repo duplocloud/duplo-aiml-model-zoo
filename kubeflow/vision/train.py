@@ -5,7 +5,7 @@ from tensorflow.keras.preprocessing import image_dataset_from_directory
 import os
 
 # map to external drive
-MAPPED_PATH = os.getenv("MAPPED_PATH", default = "../data")
+MAPPED_PATH = os.getenv("MAPPED_PATH", default = "./imagedata")
 
 # all data is within this folder ../data
 data_root_path = pathlib.Path(MAPPED_PATH)
