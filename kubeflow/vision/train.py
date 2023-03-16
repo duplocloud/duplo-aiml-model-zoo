@@ -59,7 +59,7 @@ def train_model(preprocess_input, base_model, model_name, train_dataset, validat
         model.compile(optimizer=tf.keras.optimizers.RMSprop(learning_rate=base_learning_rate),
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=["accuracy"])
         model.summary()
-        print(f"Length of trainable variables in the model: {len(model.trainable_variables)}")  # 훈련 가능한 객체 수를 확인한다.
+        print(f"Length of trainable variables in the model: {len(model.trainable_variables)}")
 
         loss0, accuracy0 = model.evaluate(validation_dataset)
         print(f"initial loss: {loss0}")
@@ -81,10 +81,10 @@ def train_model(preprocess_input, base_model, model_name, train_dataset, validat
                       optimizer=tf.keras.optimizers.RMSprop(learning_rate=base_learning_rate / 10),
                       metrics=["accuracy"])
         model.summary()
-        print(f"Length of trainable variables in the model: {len(model.trainable_variables)}")  # 훈련 가능한 객체 수를 확인한다.
+        print(f"Length of trainable variables in the model: {len(model.trainable_variables)}")
 
         history_fine = model.fit(train_dataset, epochs=epochs, initial_epoch=history.epoch[-1],
-                                 validation_data=validation_dataset, callbacks=[early_stop])  # 미세 조정된 모델로 훈련을 계속한다.
+                                 validation_data=validation_dataset, callbacks=[early_stop])
         initial_epochs = history.epoch[-1]
         # overwrite
         model.save(model_path)
