@@ -9,14 +9,15 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 RUN update-alternatives --install "/usr/bin/python" "python" "$(which python3)" 1
+RUN python -m pip install --upgrade pip
 
 RUN python --version
 RUN pip --version
 
 COPY requirements.txt   /requirements.txt
-COPY data /data
+COPY imagedata /data
 COPY *.py /code
-RUN python -m pip install --upgrade pip
+
 RUN pip install -r /requirements.txt
 
 ENV MAPPED_PATH="/data"
