@@ -1,0 +1,10 @@
+name: visiondemo2-dogscats
+description: visiondemo2-dogscats
+implementation:
+  container:
+    image: 'duplocloud/anyservice:visiondemo2-train-cpu-v1'
+    command: [
+      python3,
+      # path of the program inside the container
+      train.py,
+    ]

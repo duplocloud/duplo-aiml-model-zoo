@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: dogscats-pipeline-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12, pipelines.kubeflow.org/pipeline_compilation_time: '2023-03-16T19:36:10.081930',
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "Dogscats pipeline"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12}
+spec:
+  entrypoint: dogscats-pipeline
+  templates:
+  - name: dogscats-pipeline
+    dag:
+      tasks:
+      - {name: visiondemo2-dogscats, template: visiondemo2-dogscats}
+  - name: visiondemo2-dogscats
+    container:
+      args: []
+      command: [python3, train.py]
+      image: duplocloud/anyservice:visiondemo2-train-cpu-v1
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.12
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "visiondemo2-dogscats",
+          "implementation": {"container": {"command": ["python3", "train.py"], "image":
+          "duplocloud/anyservice:visiondemo2-train-cpu-v1"}}, "name": "visiondemo2-dogscats"}',
+        pipelines.kubeflow.org/component_ref: '{"digest": "761f246e97e86cdba64061cd6d93aae9b863feb641e65e6ccc2bc329163bca52",
+          "url": "component.yaml"}'}
+  arguments:
+    parameters: []
+  serviceAccountName: pipeline-runner

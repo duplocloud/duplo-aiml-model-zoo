@@ -53,7 +53,7 @@ juju add-model kubeflow
 # juju deploy kubeflow  --show-log --trust --channel=1.6/stable
 # juju deploy kubeflow --channel 1.7/beta --trust  --show-log 
 # juju deploy kubeflow --channel ${kubflow_version} --trust  --show-log
-juju deploy kubeflow --channel  --trust  --show-log
+juju deploy kubeflow  --trust  --show-log
 
 microk8s kubectl -n kubeflow get all -A 
 microk8s kubectl -n kubeflow get pod -A | grep PodInitializing
