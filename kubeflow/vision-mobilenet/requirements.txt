@@ -1,0 +1,17 @@
+opencv-python==4.3.0.38
+kfp==1.8.12
+kfserving==0.6.1
+boto3
+kubernetes
+numpy
+tensorflow
+pandas
+ipykernel
+pillow
+matplotlib
+tensorflow-datasets
+scipy
+seaborn
+jupyterlab
+tensorflow-model-optimization
+scikit-learn
