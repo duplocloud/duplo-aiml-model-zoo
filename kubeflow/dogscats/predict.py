@@ -40,8 +40,10 @@ def predictImage(image_name):
     expanded_img_array = img_array.reshape(-1, 224, 224, 3)
     preprocessed_img = expanded_img_array / 255.
     prediction = model.predict(preprocessed_img)
+    print(image_name)
     print(prediction)
     print("{'cats': 0, 'dogs': 1}")
 
 predictImage("cat_or_dog_1.jpg")
 predictImage("cat_or_dog_2.jpg")
+predictImage("Cat03.jpeg")
