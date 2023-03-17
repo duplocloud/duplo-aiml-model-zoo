@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  generateName: dogscats-pipeline-
-  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12, pipelines.kubeflow.org/pipeline_compilation_time: '2023-03-16T19:36:10.081930',
-    pipelines.kubeflow.org/pipeline_spec: '{"name": "Dogscats pipeline"}'}
+  generateName: dogscats-train-pipeline-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12, pipelines.kubeflow.org/pipeline_compilation_time: '2023-03-16T19:38:25.340809',
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "Dogscats train pipeline"}'}
   labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12}
 spec:
-  entrypoint: dogscats-pipeline
+  entrypoint: dogscats-train-pipeline
   templates:
-  - name: dogscats-pipeline
+  - name: dogscats-train-pipeline
     dag:
       tasks:
       - {name: visiondemo2-dogscats, template: visiondemo2-dogscats}
