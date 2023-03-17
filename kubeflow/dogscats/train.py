@@ -73,7 +73,7 @@ def model_maker():
 model = model_maker()
 
 model.compile(loss='categorical_crossentropy',
-              optimizer= keras.optimizers.Adam(lr=0.001),
+              optimizer= keras.optimizers.Adam(learning_rate=0.001),
               metrics=['acc'])
 
 model.fit_generator(train_generator,
