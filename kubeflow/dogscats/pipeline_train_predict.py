@@ -6,13 +6,13 @@ from kfp.components import func_to_container_op, InputPath, OutputPath
 dogscats_train_op = comp.load_component_from_file('component.yaml')
 
 
-def dogscats_train_pipeline(datapath: str):
-    # todo - pass to train.py container
-    dogscats_train_op()
-    return datapath #f"{datapath}/models/MobileNetVDogsCats.h5"
+
+def dogscats_train_pipeline(MAPPED_PATH: str):
+    _ = dogscats_train_op()
+    return f"/{MAPPED_PATH}/models/MobileNetVDogsCats.h5"
 
 @func_to_container_op
-def dogscats_predict_pipeline(MAPPED_PATH:str):
+def dogscats_predict_pipeline(MAPPED_PATH:str, image:str):
     from keras.models import load_model
 
     from keras.preprocessing import image
@@ -55,14 +55,17 @@ def dogscats_predict_pipeline(MAPPED_PATH:str):
         prediction = model.predict(preprocessed_img)
         print(prediction)
         print("{'cats': 0, 'dogs': 1}")
+        return prediction
 
     predictImage("cat_or_dog_1.jpg")
     predictImage("cat_or_dog_2.jpg")
+    return predictImage(image)
 
 
 def dogsctas_train_predict_pipeline():
     output_text_path = dogscats_train_pipeline("data")
-    dogscats_predict_pipeline(output_text_path) # Don't forget .output !
+    pred = dogscats_predict_pipeline(output_text_path, "cat_or_dog_2.jpg") # Don't forget .output !
+    print(pred)
 
 if __name__ == '__main__':
     kfp.compiler.Compiler().compile(dogsctas_train_predict_pipeline, 'dogscats_train_predict_pipeline.yaml')

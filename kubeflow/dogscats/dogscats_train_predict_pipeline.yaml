@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: dogsctas-train-predict-pipeline-
-  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12, pipelines.kubeflow.org/pipeline_compilation_time: '2023-03-16T20:13:07.211016',
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12, pipelines.kubeflow.org/pipeline_compilation_time: '2023-03-16T20:25:42.898944',
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Dogsctas train predict pipeline"}'}
   labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12}
 spec:
@@ -10,7 +10,7 @@ spec:
   templates:
   - name: dogscats-predict-pipeline
     container:
-      args: [--MAPPED-PATH, data]
+      args: [--MAPPED-PATH, /data/models/MobileNetVDogsCats.h5, --image, cat_or_dog_2.jpg]
       command:
       - sh
       - -ec
@@ -19,7 +19,7 @@ spec:
         printf "%s" "$0" > "$program_path"
         python3 -u "$program_path" "$@"
       - |
-        def dogscats_predict_pipeline(MAPPED_PATH):
+        def dogscats_predict_pipeline(MAPPED_PATH, image):
             from keras.models import load_model
 
             from keras.preprocessing import image
@@ -62,13 +62,16 @@ spec:
                 prediction = model.predict(preprocessed_img)
                 print(prediction)
                 print("{'cats': 0, 'dogs': 1}")
+                return prediction
 
             predictImage("cat_or_dog_1.jpg")
             predictImage("cat_or_dog_2.jpg")
+            return predictImage(image)
 
         import argparse
         _parser = argparse.ArgumentParser(prog='Dogscats predict pipeline', description='')
         _parser.add_argument("--MAPPED-PATH", dest="MAPPED_PATH", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--image", dest="image", type=str, required=True, default=argparse.SUPPRESS)
         _parsed_args = vars(_parser.parse_args())
 
         _outputs = dogscats_predict_pipeline(**_parsed_args)
@@ -79,14 +82,15 @@ spec:
         pipelines.kubeflow.org/pipeline-sdk-type: kfp
         pipelines.kubeflow.org/enable_caching: "true"
       annotations: {pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
-          {"args": ["--MAPPED-PATH", {"inputValue": "MAPPED_PATH"}], "command": ["sh",
-          "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3
-          -u \"$program_path\" \"$@\"\n", "def dogscats_predict_pipeline(MAPPED_PATH):\n    from
-          keras.models import load_model\n\n    from keras.preprocessing import image\n    from
-          keras.utils import load_img, img_to_array\n    import matplotlib.pyplot
-          as plt\n    import matplotlib.image as mpimg\n    import numpy as np\n    import
-          os\n    import pathlib\n\n    # map to external drive\n    # MAPPED_PATH
-          = os.getenv(\"MAPPED_PATH\", default=\"./data\")\n    data_root_path = pathlib.Path(MAPPED_PATH)\n    TRAIN_DATA_DIR
+          {"args": ["--MAPPED-PATH", {"inputValue": "MAPPED_PATH"}, "--image", {"inputValue":
+          "image"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\"
+          \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def
+          dogscats_predict_pipeline(MAPPED_PATH, image):\n    from keras.models import
+          load_model\n\n    from keras.preprocessing import image\n    from keras.utils
+          import load_img, img_to_array\n    import matplotlib.pyplot as plt\n    import
+          matplotlib.image as mpimg\n    import numpy as np\n    import os\n    import
+          pathlib\n\n    # map to external drive\n    # MAPPED_PATH = os.getenv(\"MAPPED_PATH\",
+          default=\"./data\")\n    data_root_path = pathlib.Path(MAPPED_PATH)\n    TRAIN_DATA_DIR
           = f\"{data_root_path}/training_set\"\n    VALIDATION_DATA_DIR = f\"{data_root_path}/test_set\"\n    training_information_dir
           = f\"{data_root_path}/training_information\"\n    single_prediction_dir
           = f\"{data_root_path}/single_prediction\"\n\n    model_name = \"MobileNetVDogsCats\"\n    models_dir
@@ -99,14 +103,16 @@ spec:
           = img_to_array(img)\n        expanded_img_array = img_array.reshape(-1,
           224, 224, 3)\n        preprocessed_img = expanded_img_array / 255.\n        prediction
           = model.predict(preprocessed_img)\n        print(prediction)\n        print(\"{''cats'':
-          0, ''dogs'': 1}\")\n\n    predictImage(\"cat_or_dog_1.jpg\")\n    predictImage(\"cat_or_dog_2.jpg\")\n\nimport
-          argparse\n_parser = argparse.ArgumentParser(prog=''Dogscats predict pipeline'',
-          description='''')\n_parser.add_argument(\"--MAPPED-PATH\", dest=\"MAPPED_PATH\",
-          type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs
-          = dogscats_predict_pipeline(**_parsed_args)\n"], "image": "python:3.7"}},
-          "inputs": [{"name": "MAPPED_PATH", "type": "String"}], "name": "Dogscats
-          predict pipeline"}', pipelines.kubeflow.org/component_ref: '{}', pipelines.kubeflow.org/arguments.parameters: '{"MAPPED_PATH":
-          "data"}'}
+          0, ''dogs'': 1}\")\n        return prediction\n\n    predictImage(\"cat_or_dog_1.jpg\")\n    predictImage(\"cat_or_dog_2.jpg\")\n    return
+          predictImage(image)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Dogscats
+          predict pipeline'', description='''')\n_parser.add_argument(\"--MAPPED-PATH\",
+          dest=\"MAPPED_PATH\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--image\",
+          dest=\"image\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+          = vars(_parser.parse_args())\n\n_outputs = dogscats_predict_pipeline(**_parsed_args)\n"],
+          "image": "python:3.7"}}, "inputs": [{"name": "MAPPED_PATH", "type": "String"},
+          {"name": "image", "type": "String"}], "name": "Dogscats predict pipeline"}',
+        pipelines.kubeflow.org/component_ref: '{}', pipelines.kubeflow.org/arguments.parameters: '{"MAPPED_PATH":
+          "/data/models/MobileNetVDogsCats.h5", "image": "cat_or_dog_2.jpg"}'}
   - name: dogsctas-train-predict-pipeline
     dag:
       tasks:
@@ -117,6 +123,14 @@ spec:
       args: []
       command: [python3, train.py]
       image: duplocloud/anyservice:visiondemo2-train-cpu-v1
+    inputs:
+      artifacts:
+      - name: MAPPED_PATH
+        path: /tmp/inputs/MAPPED_PATH/data
+        raw: {data: /data}
+    outputs:
+      artifacts:
+      - {name: visiondemo2-dogscats-modelpath, path: /tmp/outputs/modelpath/data}
     metadata:
       labels:
         pipelines.kubeflow.org/kfp_sdk_version: 1.8.12
@@ -124,9 +138,12 @@ spec:
         pipelines.kubeflow.org/enable_caching: "true"
       annotations: {pipelines.kubeflow.org/component_spec: '{"description": "visiondemo2-dogscats",
           "implementation": {"container": {"command": ["python3", "train.py"], "image":
-          "duplocloud/anyservice:visiondemo2-train-cpu-v1"}}, "name": "visiondemo2-dogscats"}',
-        pipelines.kubeflow.org/component_ref: '{"digest": "761f246e97e86cdba64061cd6d93aae9b863feb641e65e6ccc2bc329163bca52",
-          "url": "component.yaml"}'}
+          "duplocloud/anyservice:visiondemo2-train-cpu-v1"}}, "inputs": [{"default":
+          "/data", "description": "mapped drive edgebricks", "name": "MAPPED_PATH",
+          "type": "String"}], "name": "visiondemo2-dogscats", "outputs": [{"description":
+          "this is same as input plus model path", "name": "modelpath"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "b0962d06fc0e1973f20a08de810ab6c972bae804149f09b42697339e2904d6bb", "url":
+          "component.yaml"}'}
   arguments:
     parameters: []
   serviceAccountName: pipeline-runner
