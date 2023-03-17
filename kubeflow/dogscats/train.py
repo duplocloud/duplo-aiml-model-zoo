@@ -78,7 +78,10 @@ model.compile(loss='categorical_crossentropy',
 
 model.fit_generator(train_generator,
                     steps_per_epoch = math.ceil(float(TRAIN_SAMPLES) / BATCH_SIZE),
-                    epochs=10,
+                    epochs=300,
                     validation_data = validation_generator,
                     validation_steps = math.ceil(float(VALIDATION_SAMPLES) / BATCH_SIZE))
 model.save(model_path)
+
+model.save("MobileNetVDogsCats.h5")
+print("model_path", model_path)

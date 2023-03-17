@@ -28,7 +28,7 @@ IMG_WIDTH, IMG_HEIGHT = 224, 224
 BATCH_SIZE=64
 
 
-model = load_model('model.h5')
+model = load_model(model_path)
 
 def get_image(img_path):
     img = load_img(img_path, target_size=(IMG_WIDTH, IMG_HEIGHT))
