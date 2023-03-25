@@ -1,0 +1,13 @@
+FROM duplocloud/anyservice:visiondemo-train-cpu-v1
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG C.UTF-8
+
+
+COPY requirements.txt /requirements.txt
+COPY imagedata /data
+COPY *.py /code
+
+# add inference flask, seldon, tfserving
+
+ENV MAPPED_PATH="/data"
+CMD ["python", "/code/predict.py"]
