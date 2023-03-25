@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: dogsctas-train-predict-pipeline-
-  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12, pipelines.kubeflow.org/pipeline_compilation_time: '2023-03-16T20:41:39.132229',
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12, pipelines.kubeflow.org/pipeline_compilation_time: '2023-03-16T21:53:00.145978',
     pipelines.kubeflow.org/pipeline_spec: '{"name": "Dogsctas train predict pipeline"}'}
   labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12}
 spec:

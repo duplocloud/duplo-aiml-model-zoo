@@ -2,8 +2,9 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: dogscats-train-pipeline-
-  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12, pipelines.kubeflow.org/pipeline_compilation_time: '2023-03-16T19:38:25.340809',
-    pipelines.kubeflow.org/pipeline_spec: '{"name": "Dogscats train pipeline"}'}
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12, pipelines.kubeflow.org/pipeline_compilation_time: '2023-03-16T21:47:55.458258',
+    pipelines.kubeflow.org/pipeline_spec: '{"inputs": [{"name": "MAPPED_PATH", "type":
+      "String"}], "name": "Dogscats train pipeline"}'}
   labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.12}
 spec:
   entrypoint: dogscats-train-pipeline
@@ -17,6 +18,14 @@ spec:
       args: []
       command: [python3, train.py]
       image: duplocloud/anyservice:visiondemo2-train-cpu-v1
+    inputs:
+      artifacts:
+      - name: MAPPED_PATH
+        path: /tmp/inputs/MAPPED_PATH/data
+        raw: {data: /data}
+    outputs:
+      artifacts:
+      - {name: visiondemo2-dogscats-modelpath, path: /tmp/outputs/modelpath/data}
     metadata:
       labels:
         pipelines.kubeflow.org/kfp_sdk_version: 1.8.12
@@ -24,9 +33,13 @@ spec:
         pipelines.kubeflow.org/enable_caching: "true"
       annotations: {pipelines.kubeflow.org/component_spec: '{"description": "visiondemo2-dogscats",
           "implementation": {"container": {"command": ["python3", "train.py"], "image":
-          "duplocloud/anyservice:visiondemo2-train-cpu-v1"}}, "name": "visiondemo2-dogscats"}',
-        pipelines.kubeflow.org/component_ref: '{"digest": "761f246e97e86cdba64061cd6d93aae9b863feb641e65e6ccc2bc329163bca52",
-          "url": "component.yaml"}'}
+          "duplocloud/anyservice:visiondemo2-train-cpu-v1"}}, "inputs": [{"default":
+          "/data", "description": "mapped drive edgebricks", "name": "MAPPED_PATH",
+          "type": "String"}], "name": "visiondemo2-dogscats", "outputs": [{"description":
+          "this is same as input plus model path", "name": "modelpath"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "b0962d06fc0e1973f20a08de810ab6c972bae804149f09b42697339e2904d6bb", "url":
+          "component.yaml"}'}
   arguments:
-    parameters: []
+    parameters:
+    - {name: MAPPED_PATH}
   serviceAccountName: pipeline-runner
